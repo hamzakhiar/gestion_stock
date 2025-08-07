@@ -17,15 +17,15 @@ class DemandeAchatController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'produit_id'     => 'required|exists:produits,id',
-            'quantite'       => 'required|integer|min:1',
-            'date_demande'   => 'required|date',
-            'etat'           => 'nullable|string|max:50',
-            'demande_par'    => 'nullable|string|max:100',
+            'produit_id' => 'required|exists:produits,id',
+            'quantite_demandee' => 'required|integer|min:1',
+            'statut' => 'nullable|string|max:20',
+            'user_id' => 'required|exists:users,id',
+            'magasin_id' => 'required|exists:magasins,id',
+            'created_at' => 'nullable|date',
         ]);
 
         $demande = DemandeAchat::create($validated);
-
         return response()->json($demande, 201);
     }
 
@@ -42,11 +42,12 @@ class DemandeAchatController extends Controller
         $demande = DemandeAchat::findOrFail($id);
 
         $validated = $request->validate([
-            'produit_id'     => 'sometimes|required|exists:produits,id',
-            'quantite'       => 'sometimes|required|integer|min:1',
-            'date_demande'   => 'sometimes|required|date',
-            'etat'           => 'nullable|string|max:50',
-            'demande_par'    => 'nullable|string|max:100',
+            'produit_id' => 'sometimes|required|exists:produits,id',
+            'quantite_demandee' => 'sometimes|required|integer|min:1',
+            'statut' => 'sometimes|string|max:20',
+            'user_id' => 'sometimes|required|exists:users,id',
+            'magasin_id' => 'sometimes|required|exists:magasins,id',
+            'created_at' => 'sometimes|date',
         ]);
 
         $demande->update($validated);

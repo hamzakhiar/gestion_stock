@@ -10,7 +10,7 @@ class Mouvement extends Model
     use HasFactory;
 
     protected $table = 'mouvements';
-
+    public $timestamps=false;
     
 
     protected $fillable = [

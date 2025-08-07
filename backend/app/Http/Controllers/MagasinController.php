@@ -17,9 +17,8 @@ class MagasinController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nom'        => 'required|string|max:100',
-            'emplacement'=> 'nullable|string|max:255',
-            'responsable'=> 'nullable|string|max:100',
+            'nom' => 'required|string|max:100',
+            'localisation' => 'required|string|max:255', // Champ correct selon la table
         ]);
 
         $magasin = Magasin::create($validated);
@@ -40,9 +39,8 @@ class MagasinController extends Controller
         $magasin = Magasin::findOrFail($id);
 
         $validated = $request->validate([
-            'nom'        => 'sometimes|required|string|max:100',
-            'emplacement'=> 'nullable|string|max:255',
-            'responsable'=> 'nullable|string|max:100',
+            'nom' => 'sometimes|required|string|max:100',
+            'localisation' => 'sometimes|required|string|max:255',
         ]);
 
         $magasin->update($validated);

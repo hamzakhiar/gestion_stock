@@ -8,13 +8,20 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Afficher tous les utilisateurs
+    /**
+     * Lister tous les utilisateurs.
+     */
     public function index()
     {
-        return response()->json(User::all());
+        return response()->json([
+            'message' => 'Liste des utilisateurs récupérée avec succès.',
+            'data' => User::all()
+        ]);
     }
 
-    // Créer un nouvel utilisateur
+    /**
+     * Créer un nouvel utilisateur.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -25,22 +32,42 @@ class UserController extends Controller
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
+
         $user = User::create($validated);
 
-        return response()->json($user, 201);
+        return response()->json([
+            'message' => 'Utilisateur créé avec succès.',
+            'data' => $user
+        ], 201);
     }
 
-    // Afficher un utilisateur par ID
+    /**
+     * Afficher un utilisateur spécifique.
+     */
     public function show($id)
     {
-        $user = User::findOrFail($id);
-        return response()->json($user);
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non trouvé.'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Utilisateur récupéré avec succès.',
+            'data' => $user
+        ]);
     }
 
-    // Mettre à jour un utilisateur
+    /**
+     * Mettre à jour un utilisateur.
+     */
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non trouvé.'], 404);
+        }
 
         $validated = $request->validate([
             'name'     => 'sometimes|required|string|max:100',
@@ -57,15 +84,25 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return response()->json($user);
+        return response()->json([
+            'message' => 'Utilisateur mis à jour avec succès.',
+            'data' => $user
+        ]);
     }
 
-    // Supprimer un utilisateur
+    /**
+     * Supprimer un utilisateur.
+     */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'Utilisateur non trouvé.'], 404);
+        }
+
         $user->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Utilisateur supprimé avec succès.'], 200);
     }
 }

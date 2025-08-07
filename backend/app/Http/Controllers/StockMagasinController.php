@@ -1,64 +1,118 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Models\StockMagasin;
 use Illuminate\Http\Request;
 
 class StockMagasinController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Lister tous les stocks avec filtres facultatifs par magasin_id et produit_id
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = StockMagasin::with(['magasin', 'produit']);
+
+        if ($request->filled('magasin_id')) {
+            $query->where('magasin_id', $request->magasin_id);
+        }
+
+        if ($request->filled('produit_id')) {
+            $query->where('produit_id', $request->produit_id);
+        }
+
+        $stocks = $query->paginate(15);
+
+        return response()->json($stocks);
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Créer ou mettre à jour une ligne de stock
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'magasin_id' => 'required|exists:magasins,id',
+            'produit_id' => 'required|exists:produits,id',
+            'quantite'   => 'required|integer|min:0',
+        ]);
+
+        $stock = StockMagasin::where('magasin_id', $validated['magasin_id'])
+            ->where('produit_id', $validated['produit_id'])
+            ->first();
+
+        if ($stock) {
+            $stock->quantite = $validated['quantite'];
+            $stock->save();
+
+            return response()->json([
+                'message' => 'Stock mis à jour avec succès.',
+                'data'    => $stock,
+            ], 200);
+        }
+
+        $stock = StockMagasin::create($validated);
+
+        return response()->json([
+            'message' => 'Stock créé avec succès.',
+            'data'    => $stock,
+        ], 201);
     }
 
     /**
-     * Display the specified resource.
+     * Afficher un stock spécifique
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $stock = StockMagasin::with(['magasin', 'produit'])->find($id);
+
+        if (!$stock) {
+            return response()->json(['message' => 'Stock non trouvé.'], 404);
+        }
+
+        return response()->json($stock);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Mettre à jour un stock existant
      */
-    public function edit(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $stock = StockMagasin::find($id);
+
+        if (!$stock) {
+            return response()->json(['message' => 'Stock non trouvé.'], 404);
+        }
+
+        $validated = $request->validate([
+            'magasin_id' => 'required|exists:magasins,id',
+            'produit_id' => 'required|exists:produits,id',
+            'quantite'   => 'required|integer|min:0',
+        ]);
+
+        $stock->update($validated);
+
+        return response()->json([
+            'message' => 'Stock mis à jour avec succès.',
+            'data'    => $stock,
+        ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Supprimer un stock
      */
-    public function update(Request $request, string $id)
+    public function destroy($id)
     {
-        //
-    }
+        $stock = StockMagasin::find($id);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        if (!$stock) {
+            return response()->json(['message' => 'Stock non trouvé.'], 404);
+        }
+
+        $stock->delete();
+
+        return response()->json(['message' => 'Stock supprimé avec succès.']);
     }
 }

@@ -19,6 +19,7 @@ class DemandeAchat extends Model
         'statut',
         'user_id',
         'magasin_id',
+        'created_at'
     ];
 
     // Relations

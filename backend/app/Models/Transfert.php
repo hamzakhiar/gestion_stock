@@ -11,7 +11,7 @@ class Transfert extends Model
 
     protected $table = 'transferts';
 
-    //public $timestamps = false;
+    public $timestamps = false;
 
     protected $fillable = [
         'mouvement_sortie_id',
