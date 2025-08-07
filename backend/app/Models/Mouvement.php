@@ -11,7 +11,7 @@ class Mouvement extends Model
 
     protected $table = 'mouvements';
 
-    public $timestamps = false;
+    
 
     protected $fillable = [
         'type',
@@ -20,6 +20,7 @@ class Mouvement extends Model
         'user_id',
         'magasin_id',
         'reference_id',
+        'created_at' 
     ];
 
     // Relations
