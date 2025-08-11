@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -16,18 +16,25 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed', // password_confirmation required
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'utilisateur', // default role or adjust
+            'role' => 'utilisateur',
         ]);
 
-        return response()->json(['message' => 'Utilisateur créé avec succès', 'user' => $user], 201);
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Utilisateur créé avec succès',
+            'user' => $user,
+            'token' => $token,
+        ], 201);
     }
+
 
     // Login and create token
     public function login(Request $request)

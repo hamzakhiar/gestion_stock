@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Auth;
 class UserController extends Controller
 {
     /**
@@ -13,6 +13,10 @@ class UserController extends Controller
      */
     public function index()
     {
+        // Check if authenticated user is admin. GET
+        if (Auth::user()->role !== 'admin') {
+            return response()->json(['message' => 'Accès refusé. Vous devez être admin.'], 403);
+        }
         return response()->json([
             'message' => 'Liste des utilisateurs récupérée avec succès.',
             'data' => User::all()
@@ -20,10 +24,14 @@ class UserController extends Controller
     }
 
     /**
-     * Créer un nouvel utilisateur.
+     * Créer un nouvel utilisateur.POST
      */
     public function store(Request $request)
     {
+        // Check if authenticated user is admin
+        if (Auth::user()->role !== 'admin') {
+            return response()->json(['message' => 'Accès refusé. Vous devez être admin.'], 403);
+        }
         $validated = $request->validate([
             'name'     => 'required|string|max:100',
             'email'    => 'required|string|email|max:100|unique:users',
@@ -42,7 +50,7 @@ class UserController extends Controller
     }
 
     /**
-     * Afficher un utilisateur spécifique.
+     * Afficher un utilisateur spécifique.GET
      */
     public function show($id)
     {
@@ -91,10 +99,14 @@ class UserController extends Controller
     }
 
     /**
-     * Supprimer un utilisateur.
+     * Supprimer un utilisateur.DELETE
      */
     public function destroy($id)
     {
+        // Check if authenticated user is admin
+        if (Auth::user()->role !== 'admin') {
+            return response()->json(['message' => 'Accès refusé. Vous devez être admin.'], 403);
+        }
         $user = User::find($id);
 
         if (!$user) {
