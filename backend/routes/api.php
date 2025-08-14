@@ -8,7 +8,7 @@ use App\Http\Controllers\MagasinController;
 use App\Http\Controllers\MouvementController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\Api\StockMagasinController;
+use App\Http\Controllers\StockMagasinController;
 use App\Http\Controllers\Api\TransfertController;
 
 /*

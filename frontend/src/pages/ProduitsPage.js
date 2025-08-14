@@ -1,28 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import api from '../api';
+import api, { extractApiError } from '../api';
 import Loading from '../components/Loading';
+
+async function fetchAllMouvements() {
+  const res = await api.get('/mouvements');
+  return res.data || [];
+}
 
 export default function ProduitsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [formError, setFormError] = useState(null);
   const [search, setSearch] = useState('');
   const [filterLowStock, setFilterLowStock] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ nom: '', categorie: '', fournisseur: '', date_peremption: '', seuil_critique: '' });
-  const [stocks, setStocks] = useState([]);
+  const [mouvements, setMouvements] = useState([]);
 
   const load = async () => {
     try {
       setLoading(true);
-      const [res, stocksRes] = await Promise.all([
+      const [res, allMouvements] = await Promise.all([
         api.get('/produits'),
-        api.get('/stocks'),
+        fetchAllMouvements(),
       ]);
       setItems(res.data || []);
-      setStocks(stocksRes.data?.data || stocksRes.data || []);
+      setMouvements(allMouvements || []);
+      setError(null);
     } catch (e) {
-      setError('Erreur de chargement des produits');
+      setError(extractApiError(e, 'Erreur de chargement des produits'));
     } finally {
       setLoading(false);
     }
@@ -32,51 +39,65 @@ export default function ProduitsPage() {
     load();
   }, []);
 
+  // Calculate current stock for each product based on movements
+  const calculateCurrentStock = (produitId) => {
+    return mouvements.reduce((total, mouvement) => {
+      if (mouvement.produit_id === produitId) {
+        if (mouvement.type === 'entrée') {
+          return total + Number(mouvement.quantite || 0);
+        } else if (mouvement.type === 'sortie') {
+          return total - Number(mouvement.quantite || 0);
+        }
+      }
+      return total;
+    }, 0);
+  };
+
   const filtered = useMemo(() => {
     let filtered = items;
-    
-    // Search filter
+
     if (search) {
       const s = search.toLowerCase();
       filtered = filtered.filter((i) =>
         [i.nom, i.categorie, i.fournisseur].some((v) => String(v || '').toLowerCase().includes(s))
       );
     }
-    
-    // Low stock filter
+
     if (filterLowStock) {
       filtered = filtered.filter((p) => {
         if (p.seuil_critique == null) return false;
-        const currentStock = stocks.reduce((sum, s) => 
-          s.produit_id === p.id ? sum + Number(s.quantite || 0) : sum, 0
-        );
+        const currentStock = calculateCurrentStock(p.id);
         return currentStock <= Number(p.seuil_critique);
       });
     }
-    
+
     return filtered;
-  }, [items, search, filterLowStock, stocks]);
+  }, [items, search, filterLowStock, mouvements]);
 
   const resetForm = () => {
     setForm({ nom: '', categorie: '', fournisseur: '', date_peremption: '', seuil_critique: '' });
     setEditing(null);
+    setFormError(null);
   };
 
   const submit = async (e) => {
     e.preventDefault();
+    setFormError(null);
     try {
-      const payload = { ...form };
-      if (!payload.date_peremption) delete payload.date_peremption;
-      payload.seuil_critique = payload.seuil_critique ? Number(payload.seuil_critique) : null;
+      const payload = { nom: form.nom, categorie: form.categorie, fournisseur: form.fournisseur };
+      if (form.date_peremption) payload.date_peremption = form.date_peremption;
+      if (form.seuil_critique !== '') payload.seuil_critique = Number(form.seuil_critique);
+
       if (editing) {
         await api.put(`/produits/${editing.id}`, payload);
       } else {
         await api.post('/produits', payload);
+        // Intentionally not creating stock here; quantities will be managed via transferts/entrées
       }
       await load();
       resetForm();
     } catch (e) {
-      alert('Erreur lors de la sauvegarde');
+      setFormError(extractApiError(e, 'Erreur lors de la sauvegarde'));
     }
   };
 
@@ -89,6 +110,7 @@ export default function ProduitsPage() {
       date_peremption: it.date_peremption ? it.date_peremption.slice(0, 10) : '',
       seuil_critique: it.seuil_critique ?? '',
     });
+    setFormError(null);
   };
 
   const onDelete = async (id) => {
@@ -97,7 +119,7 @@ export default function ProduitsPage() {
       await api.delete(`/produits/${id}`);
       await load();
     } catch (e) {
-      alert('Erreur lors de la suppression');
+      alert(extractApiError(e, 'Erreur lors de la suppression'));
     }
   };
 
@@ -111,9 +133,9 @@ export default function ProduitsPage() {
         <div className="d-flex gap-2">
           <input className="form-control" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="form-check">
-            <input 
-              className="form-check-input" 
-              type="checkbox" 
+            <input
+              className="form-check-input"
+              type="checkbox"
               id="lowStockFilter"
               checked={filterLowStock}
               onChange={(e) => setFilterLowStock(e.target.checked)}
@@ -142,11 +164,9 @@ export default function ProduitsPage() {
               </thead>
               <tbody>
                 {filtered.map((it) => {
-                  const currentStock = stocks.reduce((sum, s) => 
-                    s.produit_id === it.id ? sum + Number(s.quantite || 0) : sum, 0
-                  );
+                  const currentStock = calculateCurrentStock(it.id);
                   const isLowStock = it.seuil_critique != null && currentStock <= Number(it.seuil_critique);
-                  
+
                   return (
                     <tr key={it.id} className={isLowStock ? 'table-warning' : ''}>
                       <td>{it.nom}</td>
@@ -175,6 +195,7 @@ export default function ProduitsPage() {
           <div className="card shadow-sm">
             <div className="card-body">
               <h5 className="card-title">{editing ? 'Modifier le produit' : 'Nouveau produit'}</h5>
+              {formError && <div className="alert alert-warning py-2">{formError}</div>}
               <form onSubmit={submit}>
                 <div className="mb-3">
                   <label className="form-label">Nom</label>
@@ -194,8 +215,10 @@ export default function ProduitsPage() {
                 </div>
                 <div className="mb-3">
                   <label className="form-label">Seuil critique</label>
-                  <input type="number" min="0" className="form-control" value={form.seuil_critique} onChange={(e) => setForm((f) => ({ ...f, seuil_critique: e.target.value }))} />
+                  <input type="number" min="0" className="form-control" value={form.seuil_critique} onChange={(e) => setForm((f) => ({ ...f, seuil_critique: e.target.value }))} required />
+
                 </div>
+
                 <div className="d-flex gap-2">
                   <button type="submit" className="btn btn-primary">{editing ? 'Mettre à jour' : 'Créer'}</button>
                   {editing && (
