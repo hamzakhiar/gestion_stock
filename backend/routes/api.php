@@ -9,7 +9,7 @@ use App\Http\Controllers\MouvementController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StockMagasinController;
-use App\Http\Controllers\Api\TransfertController;
+use App\Http\Controllers\TransfertController;
 
 /*
 |--------------------------------------------------------------------------
