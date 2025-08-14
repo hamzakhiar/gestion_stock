@@ -54,7 +54,7 @@ export default function TransferPage() {
       });
       // Create entree
       const entreeRes = await api.post('/mouvements', {
-        type: 'entrée',
+        type: 'transfert',
         produit_id: Number(produit_id),
         quantite: Number(quantite),
         user_id: user.id,

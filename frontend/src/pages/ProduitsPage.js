@@ -17,6 +17,19 @@ export default function ProduitsPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ nom: '', categorie: '', fournisseur: '', date_peremption: '', seuil_critique: '' });
   const [mouvements, setMouvements] = useState([]);
+  
+  // Enhanced filters
+  const [filters, setFilters] = useState({
+    categorie: '',
+    fournisseur: '',
+    stockMin: '',
+    stockMax: '',
+    datePeremption: '',
+    seuilCritique: ''
+  });
+  
+  // Filter panel toggle state
+  const [showFilters, setShowFilters] = useState(false);
 
   const load = async () => {
     try {
@@ -39,6 +52,17 @@ export default function ProduitsPage() {
     load();
   }, []);
 
+  // Get unique categories and suppliers for filters
+  const uniqueCategories = useMemo(() => {
+    const categories = [...new Set(items.map(item => item.categorie).filter(Boolean))];
+    return categories.sort();
+  }, [items]);
+
+  const uniqueFournisseurs = useMemo(() => {
+    const fournisseurs = [...new Set(items.map(item => item.fournisseur).filter(Boolean))];
+    return fournisseurs.sort();
+  }, [items]);
+
   // Calculate current stock for each product based on movements
   const calculateCurrentStock = (produitId) => {
     return mouvements.reduce((total, mouvement) => {
@@ -56,6 +80,7 @@ export default function ProduitsPage() {
   const filtered = useMemo(() => {
     let filtered = items;
 
+    // Text search filter
     if (search) {
       const s = search.toLowerCase();
       filtered = filtered.filter((i) =>
@@ -63,6 +88,45 @@ export default function ProduitsPage() {
       );
     }
 
+    // Category filter
+    if (filters.categorie) {
+      filtered = filtered.filter((i) => i.categorie === filters.categorie);
+    }
+
+    // Supplier filter
+    if (filters.fournisseur) {
+      filtered = filtered.filter((i) => i.fournisseur === filters.fournisseur);
+    }
+
+    // Stock range filters
+    if (filters.stockMin !== '' || filters.stockMax !== '') {
+      filtered = filtered.filter((p) => {
+        const currentStock = calculateCurrentStock(p.id);
+        if (filters.stockMin !== '' && currentStock < Number(filters.stockMin)) return false;
+        if (filters.stockMax !== '' && currentStock > Number(filters.stockMax)) return false;
+        return true;
+      });
+    }
+
+    // Expiration date filter
+    if (filters.datePeremption) {
+      const filterDate = new Date(filters.datePeremption);
+      filtered = filtered.filter((p) => {
+        if (!p.date_peremption) return false;
+        const productDate = new Date(p.date_peremption);
+        return productDate <= filterDate;
+      });
+    }
+
+    // Critical threshold filter
+    if (filters.seuilCritique !== '') {
+      filtered = filtered.filter((p) => {
+        if (p.seuil_critique == null) return false;
+        return Number(p.seuil_critique) === Number(filters.seuilCritique);
+      });
+    }
+
+    // Low stock filter
     if (filterLowStock) {
       filtered = filtered.filter((p) => {
         if (p.seuil_critique == null) return false;
@@ -72,12 +136,25 @@ export default function ProduitsPage() {
     }
 
     return filtered;
-  }, [items, search, filterLowStock, mouvements]);
+  }, [items, search, filters, filterLowStock, mouvements]);
 
   const resetForm = () => {
     setForm({ nom: '', categorie: '', fournisseur: '', date_peremption: '', seuil_critique: '' });
     setEditing(null);
     setFormError(null);
+  };
+
+  const resetFilters = () => {
+    setSearch('');
+    setFilterLowStock(false);
+    setFilters({
+      categorie: '',
+      fournisseur: '',
+      stockMin: '',
+      stockMax: '',
+      datePeremption: '',
+      seuilCritique: ''
+    });
   };
 
   const submit = async (e) => {
@@ -130,21 +207,137 @@ export default function ProduitsPage() {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="mb-0">Produits</h2>
-        <div className="d-flex gap-2">
-          <input className="form-control" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          <div className="form-check">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="lowStockFilter"
-              checked={filterLowStock}
-              onChange={(e) => setFilterLowStock(e.target.checked)}
-            />
-            <label className="form-check-label" htmlFor="lowStockFilter">
-              Stock bas
-            </label>
+        <button className="btn btn-outline-secondary btn-sm" onClick={resetFilters}>
+          Réinitialiser les filtres
+        </button>
+      </div>
+
+      {/* Enhanced Filters Panel */}
+      <div className="card mb-3">
+        <div className="card-header" style={{ cursor: 'pointer' }} onClick={() => setShowFilters(!showFilters)}>
+          <div className="d-flex justify-content-between align-items-center">
+            <h6 className="card-title mb-0">Filtres avancés</h6>
+            <span className="text-muted">
+              {showFilters ? '▼' : '▶'}
+            </span>
           </div>
         </div>
+        
+        {showFilters && (
+          <div className="card-body">
+          
+          <div className="row g-3">
+            {/* Search and Basic Filters */}
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Recherche</label>
+              <input 
+                className="form-control" 
+                placeholder="Nom, catégorie, fournisseur..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+              />
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Catégorie</label>
+              <select 
+                className="form-select" 
+                value={filters.categorie} 
+                onChange={(e) => setFilters(prev => ({ ...prev, categorie: e.target.value }))}
+              >
+                <option value="">Toutes les catégories</option>
+                {uniqueCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Fournisseur</label>
+              <select 
+                className="form-select" 
+                value={filters.fournisseur} 
+                onChange={(e) => setFilters(prev => ({ ...prev, fournisseur: e.target.value }))}
+              >
+                <option value="">Tous les fournisseurs</option>
+                {uniqueFournisseurs.map(four => (
+                  <option key={four} value={four}>{four}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Stock bas</label>
+              <div className="form-check mt-2">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="lowStockFilter"
+                  checked={filterLowStock}
+                  onChange={(e) => setFilterLowStock(e.target.checked)}
+                />
+                <label className="form-check-label" htmlFor="lowStockFilter">
+                  Afficher seulement
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div className="row g-3 mt-2">
+            {/* Stock Range Filters */}
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Stock minimum</label>
+              <input 
+                type="number" 
+                min="0" 
+                className="form-control" 
+                placeholder="Min"
+                value={filters.stockMin} 
+                onChange={(e) => setFilters(prev => ({ ...prev, stockMin: e.target.value }))} 
+              />
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Stock maximum</label>
+              <input 
+                type="number" 
+                min="0" 
+                className="form-control" 
+                placeholder="Max"
+                value={filters.stockMax} 
+                onChange={(e) => setFilters(prev => ({ ...prev, stockMax: e.target.value }))} 
+              />
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Date de péremption</label>
+              <input 
+                type="date" 
+                className="form-control" 
+                value={filters.datePeremption} 
+                onChange={(e) => setFilters(prev => ({ ...prev, datePeremption: e.target.value }))} 
+              />
+            </div>
+            
+            <div className="col-12 col-md-6 col-lg-3">
+              <label className="form-label">Seuil critique</label>
+              <input 
+                type="number" 
+                min="0" 
+                className="form-control" 
+                placeholder="Seuil"
+                value={filters.seuilCritique} 
+                onChange={(e) => setFilters(prev => ({ ...prev, seuilCritique: e.target.value }))} 
+              />
+            </div>
+          </div>
+          
+          {/* Results count */}
+          <div className="mt-3 text-muted">
+            <small>{filtered.length} produit(s) trouvé(s) sur {items.length} total</small>
+          </div>
+          </div>
+        )}
       </div>
 
       <div className="row g-3">
