@@ -1,139 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import api from '../api';
 import Loading from '../components/Loading';
-import './MouvementsPage.css';
-
-// Configuration constants
-const PAGE_SIZE = 10;
-
-// Component for sortable table headers
-const SortableHeader = ({ column, currentSort, currentDir, onSort, children }) => (
-  <th
-    className="sortable-header"
-    onClick={() => onSort(column)}
-    role="button"
-    style={{ cursor: "pointer", userSelect: "none" }}
-  >
-    <div className="d-flex align-items-center justify-content-between">
-      <span>{children}</span>
-      <span className="sort-icon">
-        {currentSort === column ? (
-          currentDir === "asc" ? '▲' : '▼'
-        ) : '↕'}
-      </span>
-    </div>
-  </th>
-);
-
-// Component for type badges
-const TypeBadge = ({ type }) => {
-  const getBadgeClass = (type) => {
-    switch (type?.toLowerCase()) {
-      case 'entrée':
-        return 'type-badge type-badge-success';
-      case 'sortie':
-        return 'type-badge type-badge-danger';
-      case 'transfert':
-        return 'type-badge type-badge-primary';
-      default:
-        return 'type-badge type-badge-secondary';
-    }
-  };
-
-  const getIcon = (type) => {
-    switch (type?.toLowerCase()) {
-      case 'entrée':
-        return '↗ ';
-      case 'sortie':
-        return '↙ ';
-      case 'transfert':
-        return '↔ ';
-      default:
-        return '';
-    }
-  };
-
-  return (
-    <span className={getBadgeClass(type)}>
-      {getIcon(type)}{type || 'Non défini'}
-    </span>
-  );
-};
-
-// Pagination component
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  const pages = [];
-  
-  // Calculate which pages to show
-  const startPage = Math.max(1, Math.min(totalPages - 4, currentPage - 2));
-  const endPage = Math.min(totalPages, startPage + 4);
-  
-  for (let i = startPage; i <= endPage; i++) {
-    pages.push(i);
-  }
-
-  return (
-    <nav>
-      <ul className="custom-pagination d-flex list-unstyled">
-        {/* First page */}
-        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => onPageChange(1)}
-            disabled={currentPage === 1}
-          >
-            «
-          </button>
-        </li>
-        
-        {/* Previous page */}
-        <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-          >
-            ‹
-          </button>
-        </li>
-        
-        {/* Page numbers */}
-        {pages.map(pageNum => (
-          <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
-            <button
-              className="page-link"
-              onClick={() => onPageChange(pageNum)}
-            >
-              {pageNum}
-            </button>
-          </li>
-        ))}
-        
-        {/* Next page */}
-        <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-          >
-            ›
-          </button>
-        </li>
-        
-        {/* Last page */}
-        <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-          <button
-            className="page-link"
-            onClick={() => onPageChange(totalPages)}
-            disabled={currentPage === totalPages}
-          >
-            »
-          </button>
-        </li>
-      </ul>
-    </nav>
-  );
-};
 
 export default function MouvementsPage() {
   const [mouvements, setMouvements] = useState([]);
@@ -148,8 +15,7 @@ export default function MouvementsPage() {
   });
   const [produits, setProduits] = useState([]);
   const [magasins, setMagasins] = useState([]);
-  const [sortState, setSortState] = useState({ by: 'date', dir: 'desc' });
-  const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -166,7 +32,6 @@ export default function MouvementsPage() {
         setMagasins(mRes.data || []);
       } catch (e) {
         setError('Erreur de chargement des mouvements');
-        console.error('Error loading movements:', e);
       } finally {
         setLoading(false);
       }
@@ -174,7 +39,7 @@ export default function MouvementsPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    const results = (mouvements || []).filter((m) => {
+    return (mouvements || []).filter((m) => {
       if (filters.type && m.type !== filters.type) return false;
       if (filters.produit_id && Number(filters.produit_id) !== Number(m.produit_id)) return false;
       if (filters.magasin_id && Number(filters.magasin_id) !== Number(m.magasin_id)) return false;
@@ -187,71 +52,14 @@ export default function MouvementsPage() {
         if (isFinite(d) && d > new Date(filters.to)) return false;
       }
       return true;
+    }).sort((a, b) => {
+      const dateA = new Date(a.created_at || a.updated_at || a.date || a.createdAt);
+      const dateB = new Date(b.created_at || b.updated_at || b.date || b.createdAt);
+      return dateB - dateA; // Most recent first
     });
+  }, [mouvements, filters]);
 
-    const getTime = (m) => {
-      const d = new Date(m.created_at || m.updated_at || m.date || m.createdAt);
-      const t = d instanceof Date && !isNaN(d) ? d.getTime() : 0;
-      return t;
-    };
-
-    const compare = (a, b) => {
-      if (sortState.by === 'date') {
-        const ta = getTime(a);
-        const tb = getTime(b);
-        return sortState.dir === 'asc' ? ta - tb : tb - ta;
-      }
-      if (sortState.by === 'type') {
-        const at = (a.type || '').toString().toLowerCase();
-        const bt = (b.type || '').toString().toLowerCase();
-        if (at === bt) return 0;
-        if (sortState.dir === 'asc') return at < bt ? -1 : 1;
-        return at > bt ? -1 : 1;
-      }
-      if (sortState.by === 'produit') {
-        const ap = (a.produit?.nom || a.produit_id || '').toString().toLowerCase();
-        const bp = (b.produit?.nom || b.produit_id || '').toString().toLowerCase();
-        if (ap === bp) return 0;
-        if (sortState.dir === 'asc') return ap < bp ? -1 : 1;
-        return ap > bp ? -1 : 1;
-      }
-      if (sortState.by === 'magasin') {
-        const am = (a.magasin?.nom || a.magasin_id || '').toString().toLowerCase();
-        const bm = (b.magasin?.nom || b.magasin_id || '').toString().toLowerCase();
-        if (am === bm) return 0;
-        if (sortState.dir === 'asc') return am < bm ? -1 : 1;
-        return am > bm ? -1 : 1;
-      }
-      if (sortState.by === 'quantite') {
-        const aq = Number(a.quantite) || 0;
-        const bq = Number(b.quantite) || 0;
-        return sortState.dir === 'asc' ? aq - bq : bq - aq;
-      }
-      return 0;
-    };
-
-    return results.sort(compare);
-  }, [mouvements, filters, sortState]);
-
-  // Calculate pagination
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const endIndex = startIndex + PAGE_SIZE;
-  const paginatedData = filtered.slice(startIndex, endIndex);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters]);
-
-  const handleSort = (column) => {
-    setSortState((s) => ({
-      by: column,
-      dir: s.by === column && s.dir === 'asc' ? 'desc' : 'asc'
-    }));
-  };
-
-  const resetFilters = () => {
+  const clearFilters = () => {
     setFilters({
       type: '',
       produit_id: '',
@@ -261,72 +69,94 @@ export default function MouvementsPage() {
     });
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+  const getTypeBadge = (type) => {
+    const typeConfig = {
+      'entrée': { color: 'badge-success', icon: 'fas fa-sign-in-alt' },
+      'sortie': { color: 'badge-danger', icon: 'fas fa-sign-out-alt' },
+      'transfert': { color: 'badge-primary', icon: 'fas fa-exchange-alt' }
+    };
+    
+    const config = typeConfig[type?.toLowerCase()] || { color: 'badge-secondary', icon: 'fas fa-question' };
+    
+    return (
+      <span className={`badge ${config.color}`}>
+        <i className={`${config.icon} me-1`}></i>
+        {type || 'Non défini'}
+      </span>
+    );
   };
 
-  const hasActiveFilters = Object.values(filters).some(filter => filter !== '');
-
-  if (loading) {
-    return <Loading />;
-  }
+  if (loading) return <Loading />;
 
   return (
-    <div className="movements-page">
-      <div className="container py-4">
-        {/* Page Header */}
-        <div className="page-header mb-4">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div className="page-container">
+      <div className="container">
+        {/* Header Section */}
+        <div className="d-flex justify-content-between align-items-center mb-5">
             <div>
-              <h1 className="page-title mb-1">
-                📊 Historique des mouvements
+            <h1 className="mb-2">
+              <i className="fas fa-chart-line text-primary me-3"></i>
+              Historique des Mouvements
               </h1>
-              <p className="page-subtitle mb-0">
-                Suivez tous les mouvements de stock en temps réel
-              </p>
+            <p className="text-muted mb-0">Suivez tous les mouvements de stock en temps réel</p>
             </div>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fas fa-filter me-1"></i>
+              Filtres
+            </button>
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => {
+                const csv = [
+                  ['Date', 'Type', 'Produit', 'Magasin', 'Quantité', 'Utilisateur'],
+                  ...filtered.map(m => [
+                    m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR') : '-',
+                    m.type || '-',
+                    m.produit?.nom || `Produit #${m.produit_id}`,
+                    m.magasin?.nom || `Magasin #${m.magasin_id}`,
+                    m.quantite || '-',
+                    m.user?.name || `Utilisateur #${m.user_id}` || '-'
+                  ])
+                ].map(row => row.join(',')).join('\n');
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'mouvements.csv';
+                a.click();
+              }}
+            >
+              <i className="fas fa-download me-1"></i>
+              Exporter CSV
+            </button>
           </div>
         </div>
 
         {/* Error Display */}
         {error && (
-          <div className="alert alert-danger mb-4" role="alert">
-            <div className="d-flex align-items-center">
-              <span className="me-2">⚠️</span>
+          <div className="alert alert-danger mb-4">
+            <i className="fas fa-exclamation-triangle me-2"></i>
               {error}
-            </div>
           </div>
         )}
 
-        {/* Filters Card */}
-        <div className="filters-card mb-4">
-          <div className="filters-header">
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center">
-                <span className="me-2">🔍</span>
-                <span className="fw-semibold">Filtres de recherche</span>
-              </div>
-              {hasActiveFilters && (
-                <button
-                  className="btn btn-outline-light btn-sm"
-                  onClick={resetFilters}
-                  title="Réinitialiser tous les filtres"
-                >
-                  ✕ Réinitialiser
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="filters-body">
+        {/* Filters Section */}
+        {showFilters && (
+          <div className="card mb-4">
+            <div className="card-body">
             <div className="row g-3">
-              <div className="col-12 col-md-6 col-lg-2">
-                <label className="form-label">TYPE DE MOUVEMENT</label>
-                <div className="input-group">
-                  <span className="input-group-text">🔄</span>
+                <div className="col-12 col-md-3">
+                  <div className="form-group">
+                    <label className="form-label">Type de mouvement</label>
                   <select 
-                    className="form-select" 
+                      className="form-control" 
                     value={filters.type} 
-                    onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}
+                      onChange={(e) => setFilters({...filters, type: e.target.value})}
                   >
                     <option value="">Tous les types</option>
                     <option value="entrée">Entrée</option>
@@ -336,14 +166,13 @@ export default function MouvementsPage() {
                 </div>
               </div>
               
-              <div className="col-12 col-md-6 col-lg-3">
-                <label className="form-label">PRODUIT</label>
-                <div className="input-group">
-                  <span className="input-group-text">📦</span>
+                <div className="col-12 col-md-3">
+                  <div className="form-group">
+                    <label className="form-label">Produit</label>
                   <select 
-                    className="form-select" 
+                      className="form-control" 
                     value={filters.produit_id} 
-                    onChange={(e) => setFilters((f) => ({ ...f, produit_id: e.target.value }))}
+                      onChange={(e) => setFilters({...filters, produit_id: e.target.value})}
                   >
                     <option value="">Tous les produits</option>
                     {produits.map((p) => (
@@ -353,14 +182,13 @@ export default function MouvementsPage() {
                 </div>
               </div>
               
-              <div className="col-12 col-md-6 col-lg-3">
-                <label className="form-label">MAGASIN</label>
-                <div className="input-group">
-                  <span className="input-group-text">🏪</span>
+                <div className="col-12 col-md-3">
+                  <div className="form-group">
+                    <label className="form-label">Magasin</label>
                   <select 
-                    className="form-select" 
+                      className="form-control" 
                     value={filters.magasin_id} 
-                    onChange={(e) => setFilters((f) => ({ ...f, magasin_id: e.target.value }))}
+                      onChange={(e) => setFilters({...filters, magasin_id: e.target.value})}
                   >
                     <option value="">Tous les magasins</option>
                     {magasins.map((m) => (
@@ -370,178 +198,152 @@ export default function MouvementsPage() {
                 </div>
               </div>
               
-              <div className="col-6 col-md-3 col-lg-2">
-                <label className="form-label">DATE DÉBUT</label>
-                <div className="input-group">
-                  <span className="input-group-text">📅</span>
+                <div className="col-12 col-md-3">
+                  <div className="form-group">
+                    <label className="form-label">Actions</label>
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={clearFilters}
+                      >
+                        <i className="fas fa-times me-1"></i>
+                        Effacer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="row g-3 mt-3">
+                <div className="col-12 col-md-6">
+                  <div className="form-group">
+                    <label className="form-label">Date de début</label>
                   <input 
                     type="date" 
                     className="form-control" 
                     value={filters.from} 
-                    onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
+                      onChange={(e) => setFilters({...filters, from: e.target.value})}
                   />
                 </div>
               </div>
               
-              <div className="col-6 col-md-3 col-lg-2">
-                <label className="form-label">DATE FIN</label>
-                <div className="input-group">
-                  <span className="input-group-text">📅</span>
+                <div className="col-12 col-md-6">
+                  <div className="form-group">
+                    <label className="form-label">Date de fin</label>
                   <input 
                     type="date" 
                     className="form-control" 
                     value={filters.to} 
-                    onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
+                      onChange={(e) => setFilters({...filters, to: e.target.value})}
                   />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Results Summary */}
-        <div className="results-summary mb-4">
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="text-muted">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <span className="text-muted">
               <strong>{filtered.length}</strong> mouvement{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}
-              {hasActiveFilters && (
-                <span className="badge bg-primary ms-2">Filtré</span>
-              )}
-            </div>
-            {totalPages > 1 && (
-              <div className="pagination-info text-muted">
-                Affichage de {startIndex + 1} à {Math.min(endIndex, filtered.length)} sur {filtered.length} résultats
-              </div>
+            </span>
+            {Object.values(filters).some(f => f !== '') && (
+              <span className="badge badge-primary ms-2">Filtré</span>
             )}
           </div>
         </div>
 
-        {/* Main Table */}
-        <div className="table-card">
+        {/* Movements Table */}
+        <div className="card">
+          <div className="card-header">
+            <div className="d-flex justify-content-between align-items-center">
+              <h3 className="card-title mb-0">
+                <i className="fas fa-list me-2"></i>
+                Mouvements de Stock
+              </h3>
+            </div>
+          </div>
+          
+          <div className="card-body p-0">
+            {filtered.length === 0 ? (
+              <div className="text-center py-5">
+                <i className="fas fa-chart-line text-muted" style={{ fontSize: '3rem' }}></i>
+                <h4 className="text-muted mt-3">Aucun mouvement trouvé</h4>
+                <p className="text-muted mb-0">
+                  {Object.values(filters).some(f => f !== '') 
+                    ? "Essayez de modifier vos critères de recherche" 
+                    : "Aucun mouvement n'est enregistré"}
+                </p>
+              </div>
+            ) : (
           <div className="table-responsive">
-            <table className="table movements-table">
-              <thead className="table-header">
-                <tr>
-                  <SortableHeader
-                    column="date"
-                    currentSort={sortState.by}
-                    currentDir={sortState.dir}
-                    onSort={handleSort}
-                  >
-                    Date
-                  </SortableHeader>
-                  <SortableHeader
-                    column="type"
-                    currentSort={sortState.by}
-                    currentDir={sortState.dir}
-                    onSort={handleSort}
-                  >
-                    Type
-                  </SortableHeader>
-                  <SortableHeader
-                    column="produit"
-                    currentSort={sortState.by}
-                    currentDir={sortState.dir}
-                    onSort={handleSort}
-                  >
-                    Produit
-                  </SortableHeader>
-                  <SortableHeader
-                    column="magasin"
-                    currentSort={sortState.by}
-                    currentDir={sortState.dir}
-                    onSort={handleSort}
-                  >
-                    Magasin
-                  </SortableHeader>
-                  <SortableHeader
-                    column="quantite"
-                    currentSort={sortState.by}
-                    currentDir={sortState.dir}
-                    onSort={handleSort}
-                  >
-                    Quantité
-                  </SortableHeader>
+                <table className="table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Date & Heure</th>
+                      <th>Type</th>
+                      <th>Produit</th>
+                      <th>Magasin</th>
+                      <th>Quantité</th>
                   <th>Utilisateur</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="text-center py-5">
-                      <div className="empty-state">
-                        <div className="empty-icon">📊</div>
-                        <h5 className="empty-title">Aucun mouvement trouvé</h5>
-                        <p className="empty-subtitle">
-                          {hasActiveFilters 
-                            ? "Essayez de modifier vos critères de recherche" 
-                            : "Aucun mouvement n'est enregistré"}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedData.map((m, index) => (
-                    <tr 
-                      key={m.id} 
-                      className="table-row"
-                      style={{ animationDelay: `${index * 0.05}s` }}
-                    >
-                      <td>
-                        <div className="date-info">
-                          <div className="fw-semibold text-dark">
-                            {m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR') : '-'}
-                          </div>
-                          <small className="text-muted">
-                            {m.created_at ? new Date(m.created_at).toLocaleTimeString('fr-FR') : ''}
-                          </small>
+                    {filtered.map((mouvement) => (
+                      <tr key={mouvement.id}>
+                        <td>
+                          <div>
+                            <strong>
+                              {mouvement.created_at ? new Date(mouvement.created_at).toLocaleDateString('fr-FR') : '-'}
+                            </strong>
+                            <br />
+                            <small className="text-muted">
+                              {mouvement.created_at ? new Date(mouvement.created_at).toLocaleTimeString('fr-FR') : ''}
+                            </small>
                         </div>
                       </td>
                       <td>
-                        <TypeBadge type={m.type} />
+                          {getTypeBadge(mouvement.type)}
                       </td>
                       <td>
-                        <div className="product-info">
-                          <span className="me-2">📦</span>
-                          <span className="fw-semibold">
-                            {m.produit?.nom || `Produit #${m.produit_id}`}
+                          <div className="d-flex align-items-center">
+                            <i className="fas fa-box text-primary me-2"></i>
+                            <span>
+                              {mouvement.produit?.nom || `Produit #${mouvement.produit_id}`}
                           </span>
                         </div>
                       </td>
                       <td>
-                        <div className="store-info">
-                          <span className="me-2">🏪</span>
-                          <span>{m.magasin?.nom || `Magasin #${m.magasin_id}`}</span>
+                          <div className="d-flex align-items-center">
+                            <i className="fas fa-warehouse text-info me-2"></i>
+                            <span>
+                              {mouvement.magasin?.nom || `Magasin #${mouvement.magasin_id}`}
+                            </span>
                         </div>
                       </td>
                       <td>
-                        <span className="quantity-badge">
-                          {m.quantite}
+                          <span className="fw-bold">
+                            {mouvement.quantite || '-'}
                         </span>
                       </td>
                       <td>
-                        <span className="user-info">
-                          {m.user?.name || `Utilisateur #${m.user_id}` || '-'}
+                          <div className="d-flex align-items-center">
+                            <i className="fas fa-user text-secondary me-2"></i>
+                            <span>
+                              {mouvement.user?.name || `Utilisateur #${mouvement.user_id}` || '-'}
                         </span>
+                          </div>
                       </td>
                     </tr>
-                  ))
-                )}
+                    ))}
               </tbody>
             </table>
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="d-flex justify-content-center align-items-center mt-4">
-            <Pagination 
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

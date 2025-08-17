@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import api, { extractApiError } from '../api';
-import Loading from '../components/Loading';
+import React, { useEffect, useMemo, useState } from "react";
+import api, { extractApiError } from "../api";
+import Loading from "../components/Loading";
 
 async function fetchAllMouvements() {
-  const res = await api.get('/mouvements');
+  const res = await api.get("/mouvements");
   return res.data || [];
 }
 
@@ -12,22 +12,29 @@ export default function ProduitsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formError, setFormError] = useState(null);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [filterLowStock, setFilterLowStock] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ nom: '', categorie: '', fournisseur: '', date_peremption: '', seuil_critique: '' });
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm] = useState({
+    nom: "",
+    categorie: "",
+    fournisseur: "",
+    date_peremption: "",
+    seuil_critique: "",
+  });
   const [mouvements, setMouvements] = useState([]);
-  
+
   // Enhanced filters
   const [filters, setFilters] = useState({
-    categorie: '',
-    fournisseur: '',
-    stockMin: '',
-    stockMax: '',
-    datePeremption: '',
-    seuilCritique: ''
+    categorie: "",
+    fournisseur: "",
+    stockMin: "",
+    stockMax: "",
+    datePeremption: "",
+    seuilCritique: "",
   });
-  
+
   // Filter panel toggle state
   const [showFilters, setShowFilters] = useState(false);
 
@@ -35,14 +42,14 @@ export default function ProduitsPage() {
     try {
       setLoading(true);
       const [res, allMouvements] = await Promise.all([
-        api.get('/produits'),
+        api.get("/produits"),
         fetchAllMouvements(),
       ]);
       setItems(res.data || []);
       setMouvements(allMouvements || []);
       setError(null);
     } catch (e) {
-      setError(extractApiError(e, 'Erreur de chargement des produits'));
+      setError(extractApiError(e, "Erreur de chargement des produits"));
     } finally {
       setLoading(false);
     }
@@ -54,12 +61,16 @@ export default function ProduitsPage() {
 
   // Get unique categories and suppliers for filters
   const uniqueCategories = useMemo(() => {
-    const categories = [...new Set(items.map(item => item.categorie).filter(Boolean))];
+    const categories = [
+      ...new Set(items.map((item) => item.categorie).filter(Boolean)),
+    ];
     return categories.sort();
   }, [items]);
 
   const uniqueFournisseurs = useMemo(() => {
-    const fournisseurs = [...new Set(items.map(item => item.fournisseur).filter(Boolean))];
+    const fournisseurs = [
+      ...new Set(items.map((item) => item.fournisseur).filter(Boolean)),
+    ];
     return fournisseurs.sort();
   }, [items]);
 
@@ -67,9 +78,9 @@ export default function ProduitsPage() {
   const calculateCurrentStock = (produitId) => {
     return mouvements.reduce((total, mouvement) => {
       if (mouvement.produit_id === produitId) {
-        if (mouvement.type === 'entrée') {
+        if (mouvement.type === "entrée") {
           return total + Number(mouvement.quantite || 0);
-        } else if (mouvement.type === 'sortie') {
+        } else if (mouvement.type === "sortie") {
           return total - Number(mouvement.quantite || 0);
         }
       }
@@ -84,7 +95,11 @@ export default function ProduitsPage() {
     if (search) {
       const s = search.toLowerCase();
       filtered = filtered.filter((i) =>
-        [i.nom, i.categorie, i.fournisseur].some((v) => String(v || '').toLowerCase().includes(s))
+        [i.nom, i.categorie, i.fournisseur].some((v) =>
+          String(v || "")
+            .toLowerCase()
+            .includes(s)
+        )
       );
     }
 
@@ -98,333 +113,625 @@ export default function ProduitsPage() {
       filtered = filtered.filter((i) => i.fournisseur === filters.fournisseur);
     }
 
-    // Stock range filters
-    if (filters.stockMin !== '' || filters.stockMax !== '') {
-      filtered = filtered.filter((p) => {
-        const currentStock = calculateCurrentStock(p.id);
-        if (filters.stockMin !== '' && currentStock < Number(filters.stockMin)) return false;
-        if (filters.stockMax !== '' && currentStock > Number(filters.stockMax)) return false;
-        return true;
-      });
+    // Stock range filter
+    if (filters.stockMin !== "") {
+      filtered = filtered.filter(
+        (i) => calculateCurrentStock(i.id) >= Number(filters.stockMin)
+      );
     }
-
-    // Expiration date filter
-    if (filters.datePeremption) {
-      const filterDate = new Date(filters.datePeremption);
-      filtered = filtered.filter((p) => {
-        if (!p.date_peremption) return false;
-        const productDate = new Date(p.date_peremption);
-        return productDate <= filterDate;
-      });
-    }
-
-    // Critical threshold filter
-    if (filters.seuilCritique !== '') {
-      filtered = filtered.filter((p) => {
-        if (p.seuil_critique == null) return false;
-        return Number(p.seuil_critique) === Number(filters.seuilCritique);
-      });
+    if (filters.stockMax !== "") {
+      filtered = filtered.filter(
+        (i) => calculateCurrentStock(i.id) <= Number(filters.stockMax)
+      );
     }
 
     // Low stock filter
     if (filterLowStock) {
-      filtered = filtered.filter((p) => {
-        if (p.seuil_critique == null) return false;
-        const currentStock = calculateCurrentStock(p.id);
-        return currentStock <= Number(p.seuil_critique);
+      filtered = filtered.filter((i) => {
+        const currentStock = calculateCurrentStock(i.id);
+        return i.seuil_critique && currentStock <= Number(i.seuil_critique);
       });
     }
 
     return filtered;
   }, [items, search, filters, filterLowStock, mouvements]);
 
-  const resetForm = () => {
-    setForm({ nom: '', categorie: '', fournisseur: '', date_peremption: '', seuil_critique: '' });
-    setEditing(null);
-    setFormError(null);
-  };
-
-  const resetFilters = () => {
-    setSearch('');
-    setFilterLowStock(false);
-    setFilters({
-      categorie: '',
-      fournisseur: '',
-      stockMin: '',
-      stockMax: '',
-      datePeremption: '',
-      seuilCritique: ''
-    });
-  };
-
-  const submit = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setFormError(null);
-    try {
-      const payload = { nom: form.nom, categorie: form.categorie, fournisseur: form.fournisseur };
-      if (form.date_peremption) payload.date_peremption = form.date_peremption;
-      if (form.seuil_critique !== '') payload.seuil_critique = Number(form.seuil_critique);
 
-      if (editing) {
+    if (!form.nom.trim()) {
+      setFormError("Le nom du produit est requis");
+      return;
+    }
+
+    // Prepare the payload with proper data types
+    const payload = {
+      nom: form.nom.trim(),
+      categorie: form.categorie.trim() || null,
+      fournisseur: form.fournisseur.trim() || null,
+      date_peremption: form.date_peremption || null,
+      seuil_critique: form.seuil_critique ? Number(form.seuil_critique) : null,
+    };
+
+    try {
+      if (editing && editing.id) {
         await api.put(`/produits/${editing.id}`, payload);
       } else {
-        await api.post('/produits', payload);
-        // Intentionally not creating stock here; quantities will be managed via transferts/entrées
+        await api.post("/produits", payload);
       }
-      await load();
-      resetForm();
+      setForm({
+        nom: "",
+        categorie: "",
+        fournisseur: "",
+        date_peremption: "",
+        seuil_critique: "",
+      });
+      setEditing(null);
+      setShowModal(false);
+      load();
     } catch (e) {
-      setFormError(extractApiError(e, 'Erreur lors de la sauvegarde'));
+      setFormError(extractApiError(e, "Erreur lors de la sauvegarde"));
     }
-  };
-
-  const onEdit = (it) => {
-    setEditing(it);
-    setForm({
-      nom: it.nom || '',
-      categorie: it.categorie || '',
-      fournisseur: it.fournisseur || '',
-      date_peremption: it.date_peremption ? it.date_peremption.slice(0, 10) : '',
-      seuil_critique: it.seuil_critique ?? '',
-    });
-    setFormError(null);
   };
 
   const onDelete = async (id) => {
-    if (!window.confirm('Supprimer ce produit ?')) return;
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce produit ?"))
+      return;
+
     try {
       await api.delete(`/produits/${id}`);
-      await load();
+      load();
     } catch (e) {
-      alert(extractApiError(e, 'Erreur lors de la suppression'));
+      setError(extractApiError(e, "Erreur lors de la suppression"));
     }
   };
 
+  const onEdit = (item) => {
+    setEditing(item);
+    setForm({
+      nom: item.nom || "",
+      categorie: item.categorie || "",
+      fournisseur: item.fournisseur || "",
+      date_peremption: item.date_peremption || "",
+      seuil_critique: item.seuil_critique || "",
+    });
+    setShowModal(true);
+  };
+
+  const openNewProductModal = () => {
+    setEditing(null);
+    setForm({
+      nom: "",
+      categorie: "",
+      fournisseur: "",
+      date_peremption: "",
+      seuil_critique: "",
+    });
+    setFormError(null);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditing(null);
+    setForm({
+      nom: "",
+      categorie: "",
+      fournisseur: "",
+      date_peremption: "",
+      seuil_critique: "",
+    });
+    setFormError(null);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      categorie: "",
+      fournisseur: "",
+      stockMin: "",
+      stockMax: "",
+      datePeremption: "",
+      seuilCritique: "",
+    });
+    setSearch("");
+    setFilterLowStock(false);
+  };
+
   if (loading) return <Loading />;
-  if (error) return <div className="container py-4"><div className="alert alert-danger">{error}</div></div>;
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2 className="mb-0">Produits</h2>
-        <button className="btn btn-outline-secondary btn-sm" onClick={resetFilters}>
-          Réinitialiser les filtres
-        </button>
-      </div>
+    <div className="page-container">
+      <div className="container">
+        {/* Header Section */}
+        <div className="d-flex justify-content-between align-items-center mb-5">
+          <div>
+            <h1 className="mb-2">
+              <i className="fas fa-boxes text-primary me-3"></i>
+              Gestion des Produits
+            </h1>
+            <p className="text-muted mb-0">
+              Gérez votre catalogue de produits de nettoyage
+            </p>
+          </div>
+          <button className="btn btn-primary" onClick={openNewProductModal}>
+            <i className="fas fa-plus me-2"></i>
+            Nouveau Produit
+          </button>
+        </div>
 
-      {/* Enhanced Filters Panel */}
-      <div className="card mb-3">
-        <div className="card-header" style={{ cursor: 'pointer' }} onClick={() => setShowFilters(!showFilters)}>
-          <div className="d-flex justify-content-between align-items-center">
-            <h6 className="card-title mb-0">Filtres avancés</h6>
-            <span className="text-muted">
-              {showFilters ? '▼' : '▶'}
-            </span>
+        {/* Error Display */}
+        {error && (
+          <div className="alert alert-danger mb-4">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            {error}
+          </div>
+        )}
+
+        {/* Search and Filters */}
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-12 col-md-6">
+                <div className="form-group mb-0">
+                  <label className="form-label">
+                    <i className="fas fa-search me-2"></i>
+                    Rechercher
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Nom, catégorie, fournisseur..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6">
+                <div className="d-flex gap-2 align-items-end">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="filterLowStock"
+                      checked={filterLowStock}
+                      onChange={(e) => setFilterLowStock(e.target.checked)}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor="filterLowStock"
+                    >
+                      Stock bas uniquement
+                    </label>
+                  </div>
+
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <i className="fas fa-filter me-1"></i>
+                    Filtres avancés
+                  </button>
+
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={clearFilters}
+                  >
+                    <i className="fas fa-times me-1"></i>
+                    Effacer
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Filters */}
+            {showFilters && (
+              <div className="row g-3 mt-3 pt-3 border-top">
+                <div className="col-12 col-md-3">
+                  <div className="form-group mb-0">
+                    <label className="form-label">Catégorie</label>
+                    <select
+                      className="form-control"
+                      value={filters.categorie}
+                      onChange={(e) =>
+                        setFilters({ ...filters, categorie: e.target.value })
+                      }
+                    >
+                      <option value="">Toutes les catégories</option>
+                      {uniqueCategories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="col-12 col-md-3">
+                  <div className="form-group mb-0">
+                    <label className="form-label">Fournisseur</label>
+                    <select
+                      className="form-control"
+                      value={filters.fournisseur}
+                      onChange={(e) =>
+                        setFilters({ ...filters, fournisseur: e.target.value })
+                      }
+                    >
+                      <option value="">Tous les fournisseurs</option>
+                      {uniqueFournisseurs.map((four) => (
+                        <option key={four} value={four}>
+                          {four}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="col-12 col-md-3">
+                  <div className="form-group mb-0">
+                    <label className="form-label">Stock min</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="0"
+                      value={filters.stockMin}
+                      onChange={(e) =>
+                        setFilters({ ...filters, stockMin: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="col-12 col-md-3">
+                  <div className="form-group mb-0">
+                    <label className="form-label">Stock max</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="1000"
+                      value={filters.stockMax}
+                      onChange={(e) =>
+                        setFilters({ ...filters, stockMax: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        
-        {showFilters && (
-          <div className="card-body">
-          
-          <div className="row g-3">
-            {/* Search and Basic Filters */}
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Recherche</label>
-              <input 
-                className="form-control" 
-                placeholder="Nom, catégorie, fournisseur..." 
-                value={search} 
-                onChange={(e) => setSearch(e.target.value)} 
-              />
-            </div>
-            
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Catégorie</label>
-              <select 
-                className="form-select" 
-                value={filters.categorie} 
-                onChange={(e) => setFilters(prev => ({ ...prev, categorie: e.target.value }))}
-              >
-                <option value="">Toutes les catégories</option>
-                {uniqueCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Fournisseur</label>
-              <select 
-                className="form-select" 
-                value={filters.fournisseur} 
-                onChange={(e) => setFilters(prev => ({ ...prev, fournisseur: e.target.value }))}
-              >
-                <option value="">Tous les fournisseurs</option>
-                {uniqueFournisseurs.map(four => (
-                  <option key={four} value={four}>{four}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Stock bas</label>
-              <div className="form-check mt-2">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="lowStockFilter"
-                  checked={filterLowStock}
-                  onChange={(e) => setFilterLowStock(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="lowStockFilter">
-                  Afficher seulement
-                </label>
+
+        {/* Products Table */}
+        <div className="card">
+          <div className="card-header">
+            <div className="d-flex justify-content-between align-items-center">
+              <h3 className="card-title mb-0">
+                <i className="fas fa-list me-2"></i>
+                Produits ({filtered.length})
+              </h3>
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={() => {
+                    const csv = [
+                      [
+                        "Nom",
+                        "Catégorie",
+                        "Fournisseur",
+                        "Stock Actuel",
+                        "Seuil Critique",
+                        "Date Péremption",
+                      ],
+                      ...filtered.map((item) => [
+                        item.nom,
+                        item.categorie || "",
+                        item.fournisseur || "",
+                        calculateCurrentStock(item.id),
+                        item.seuil_critique || "",
+                        item.date_peremption || "",
+                      ]),
+                    ]
+                      .map((row) => row.join(","))
+                      .join("\n");
+
+                    const blob = new Blob([csv], { type: "text/csv" });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "produits.csv";
+                    a.click();
+                  }}
+                >
+                  <i className="fas fa-download me-1"></i>
+                  Exporter CSV
+                </button>
               </div>
             </div>
           </div>
-          
-          <div className="row g-3 mt-2">
-            {/* Stock Range Filters */}
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Stock minimum</label>
-              <input 
-                type="number" 
-                min="0" 
-                className="form-control" 
-                placeholder="Min"
-                value={filters.stockMin} 
-                onChange={(e) => setFilters(prev => ({ ...prev, stockMin: e.target.value }))} 
-              />
-            </div>
-            
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Stock maximum</label>
-              <input 
-                type="number" 
-                min="0" 
-                className="form-control" 
-                placeholder="Max"
-                value={filters.stockMax} 
-                onChange={(e) => setFilters(prev => ({ ...prev, stockMax: e.target.value }))} 
-              />
-            </div>
-            
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Date de péremption</label>
-              <input 
-                type="date" 
-                className="form-control" 
-                value={filters.datePeremption} 
-                onChange={(e) => setFilters(prev => ({ ...prev, datePeremption: e.target.value }))} 
-              />
-            </div>
-            
-            <div className="col-12 col-md-6 col-lg-3">
-              <label className="form-label">Seuil critique</label>
-              <input 
-                type="number" 
-                min="0" 
-                className="form-control" 
-                placeholder="Seuil"
-                value={filters.seuilCritique} 
-                onChange={(e) => setFilters(prev => ({ ...prev, seuilCritique: e.target.value }))} 
-              />
-            </div>
+
+          <div className="card-body p-0">
+            {filtered.length === 0 ? (
+              <div className="text-center py-5">
+                <i
+                  className="fas fa-box-open text-muted"
+                  style={{ fontSize: "3rem" }}
+                ></i>
+                <h4 className="text-muted mt-3">Aucun produit trouvé</h4>
+                <p className="text-muted mb-0">
+                  Essayez de modifier vos critères de recherche
+                </p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table mb-0">
+                  <thead>
+                    <tr>
+                      <th>Produit</th>
+                      <th>Catégorie</th>
+                      <th>Fournisseur</th>
+                      <th>Stock Actuel</th>
+                      <th>Seuil Critique</th>
+                      <th>Date Péremption</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((item) => {
+                      const currentStock = calculateCurrentStock(item.id);
+                      const isLowStock =
+                        item.seuil_critique &&
+                        currentStock <= Number(item.seuil_critique);
+
+                      return (
+                        <tr key={item.id}>
+                          <td>
+                            <div>
+                              <strong>{item.nom}</strong>
+                              {item.description && (
+                                <>
+                                  <br />
+                                  <small className="text-muted">
+                                    {item.description}
+                                  </small>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            {item.categorie ? (
+                              <span className="badge badge-secondary">
+                                {item.categorie}
+                              </span>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
+                          <td>
+                            {item.fournisseur || (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <span
+                                className={`fw-bold me-2 ${
+                                  isLowStock ? "text-danger" : ""
+                                }`}
+                              >
+                                {currentStock}
+                              </span>
+                              {item.seuil_critique && (
+                                <div
+                                  className="progress flex-grow-1"
+                                  style={{ height: "8px", width: "80px" }}
+                                >
+                                  <div
+                                    className={`progress-bar ${
+                                      isLowStock ? "bg-danger" : "bg-success"
+                                    }`}
+                                    style={{
+                                      width: `${Math.min(
+                                        (currentStock / item.seuil_critique) *
+                                          100,
+                                        100
+                                      )}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            {item.seuil_critique ? (
+                              <span className="badge badge-warning">
+                                {item.seuil_critique}
+                              </span>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
+                          <td>
+                            {item.date_peremption ? (
+                              <span
+                                className={`badge ${
+                                  new Date(item.date_peremption) < new Date()
+                                    ? "badge-danger"
+                                    : "badge-info"
+                                }`}
+                              >
+                                {new Date(
+                                  item.date_peremption
+                                ).toLocaleDateString("fr-FR")}
+                              </span>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="d-flex gap-1">
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => onEdit(item)}
+                                title="Modifier"
+                              >
+                                <i className="fas fa-edit"></i>
+                              </button>
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() => onDelete(item.id)}
+                                title="Supprimer"
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          
-          {/* Results count */}
-          <div className="mt-3 text-muted">
-            <small>{filtered.length} produit(s) trouvé(s) sur {items.length} total</small>
-          </div>
+        </div>
+
+        {/* Add/Edit Modal */}
+        {showModal && (
+          <div
+            className="modal show d-block"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <i className="fas fa-edit me-2"></i>
+                    {editing && editing.id
+                      ? "Modifier le produit"
+                      : "Nouveau produit"}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeModal}
+                  ></button>
+                </div>
+
+                <form onSubmit={onSubmit}>
+                  <div className="modal-body">
+                    {formError && (
+                      <div className="alert alert-danger">
+                        <i className="fas fa-exclamation-triangle me-2"></i>
+                        {formError}
+                      </div>
+                    )}
+
+                    <div className="row g-3">
+                      <div className="col-12">
+                        <div className="form-group">
+                          <label className="form-label">Nom du produit *</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={form.nom}
+                            onChange={(e) =>
+                              setForm({ ...form, nom: e.target.value })
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-12 col-md-6">
+                        <div className="form-group">
+                          <label className="form-label">Catégorie</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={form.categorie}
+                            onChange={(e) =>
+                              setForm({ ...form, categorie: e.target.value })
+                            }
+                            placeholder="ex: Désinfectant"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-12 col-md-6">
+                        <div className="form-group">
+                          <label className="form-label">Fournisseur</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={form.fournisseur}
+                            onChange={(e) =>
+                              setForm({ ...form, fournisseur: e.target.value })
+                            }
+                            placeholder="ex: Fournisseur ABC"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-12 col-md-6">
+                        <div className="form-group">
+                          <label className="form-label">
+                            Date de péremption
+                          </label>
+                          <input
+                            type="date"
+                            className="form-control"
+                            value={form.date_peremption}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                date_peremption: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-12 col-md-6">
+                        <div className="form-group">
+                          <label className="form-label">Seuil critique</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={form.seuil_critique}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                seuil_critique: e.target.value,
+                              })
+                            }
+                            placeholder="ex: 10"
+                            min="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={closeModal}
+                    >
+                      Annuler
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      <i className="fas fa-save me-2"></i>
+                      {editing && editing.id ? "Mettre à jour" : "Créer"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
           </div>
         )}
-      </div>
-
-      <div className="row g-3">
-        <div className="col-12 col-lg-7">
-          <div className="table-responsive">
-            <table className="table table-striped align-middle">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Catégorie</th>
-                  <th>Fournisseur</th>
-                  <th>Stock actuel</th>
-                  <th>Péremption</th>
-                  <th>Seuil</th>
-                  <th style={{ width: 150 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((it) => {
-                  const currentStock = calculateCurrentStock(it.id);
-                  const isLowStock = it.seuil_critique != null && currentStock <= Number(it.seuil_critique);
-
-                  return (
-                    <tr key={it.id} className={isLowStock ? 'table-warning' : ''}>
-                      <td>{it.nom}</td>
-                      <td>{it.categorie}</td>
-                      <td>{it.fournisseur}</td>
-                      <td>
-                        <span className={isLowStock ? 'text-danger fw-bold' : ''}>
-                          {currentStock}
-                        </span>
-                        {isLowStock && <span className="badge bg-warning text-dark ms-1">Stock bas</span>}
-                      </td>
-                      <td>{it.date_peremption ? new Date(it.date_peremption).toLocaleDateString() : '-'}</td>
-                      <td>{it.seuil_critique ?? '-'}</td>
-                      <td>
-                        <button className="btn btn-sm btn-outline-primary me-2" onClick={() => onEdit(it)}>Modifier</button>
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(it.id)}>Supprimer</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div className="col-12 col-lg-5">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">{editing ? 'Modifier le produit' : 'Nouveau produit'}</h5>
-              {formError && <div className="alert alert-warning py-2">{formError}</div>}
-              <form onSubmit={submit}>
-                <div className="mb-3">
-                  <label className="form-label">Nom</label>
-                  <input className="form-control" value={form.nom} onChange={(e) => setForm((f) => ({ ...f, nom: e.target.value }))} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Catégorie</label>
-                  <input className="form-control" value={form.categorie} onChange={(e) => setForm((f) => ({ ...f, categorie: e.target.value }))} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Fournisseur</label>
-                  <input className="form-control" value={form.fournisseur} onChange={(e) => setForm((f) => ({ ...f, fournisseur: e.target.value }))} required />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Date de péremption</label>
-                  <input type="date" className="form-control" value={form.date_peremption} onChange={(e) => setForm((f) => ({ ...f, date_peremption: e.target.value }))} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Seuil critique</label>
-                  <input type="number" min="0" className="form-control" value={form.seuil_critique} onChange={(e) => setForm((f) => ({ ...f, seuil_critique: e.target.value }))} required />
-
-                </div>
-
-                <div className="d-flex gap-2">
-                  <button type="submit" className="btn btn-primary">{editing ? 'Mettre à jour' : 'Créer'}</button>
-                  {editing && (
-                    <button type="button" className="btn btn-secondary" onClick={resetForm}>Annuler</button>
-                  )}
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
 }
-
-
