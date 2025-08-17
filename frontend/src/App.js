@@ -19,6 +19,7 @@ import TransferPage from "./pages/TransferPage";
 import BonEntreePage from "./pages/BonEntreePage";
 import BonSortiePage from "./pages/BonSortiePage";
 import MouvementsPage from "./pages/MouvementsPage";
+import DemandeReapprovisionnementPage from "./pages/DemandeReapprovisionnementPage";
 import UsersPage from "./pages/UsersPage";
 
 function AppContent() {
@@ -90,6 +91,15 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <MouvementsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/demandes-reapprovisionnement"
+          element={
+            <ProtectedRoute>
+              <DemandeReapprovisionnementPage />
             </ProtectedRoute>
           }
         />

@@ -175,11 +175,23 @@ export default function Dashboard() {
                 <i className="fas fa-exclamation-triangle text-warning me-2"></i>
                 Alertes de Stock Bas
               </h3>
-              {lowStock.length > 0 && (
-                <span className="badge badge-danger">
-                  {lowStock.length} alerte{lowStock.length > 1 ? "s" : ""}
-                </span>
-              )}
+              <div className="d-flex align-items-center gap-2">
+                {lowStock.length > 0 && (
+                  <span className="badge badge-danger">
+                    {lowStock.length} alerte{lowStock.length > 1 ? "s" : ""}
+                  </span>
+                )}
+                {lowStock.length > 0 && (
+                  <button 
+                    className="btn btn-warning btn-sm"
+                    onClick={() => window.location.href = '/demandes-reapprovisionnement'}
+                    title="Créer une demande de réapprovisionnement"
+                  >
+                    <i className="fas fa-shopping-cart me-1"></i>
+                    Demande d'achat
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           <div className="card-body">
@@ -267,7 +279,7 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="row g-4 mt-5">
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-4">
             <div className="card">
               <div className="card-body text-center">
                 <i
@@ -286,7 +298,29 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-4">
+            <div className="card">
+              <div className="card-body text-center">
+                <i
+                  className="fas fa-shopping-cart text-warning"
+                  style={{ fontSize: "3rem" }}
+                ></i>
+                <h4 className="mt-3">Demande de Réapprovisionnement</h4>
+                <p className="text-muted">
+                  Créer une demande d'achat pour réapprovisionner
+                </p>
+                <button 
+                  className="btn btn-warning"
+                  onClick={() => window.location.href = '/demandes-reapprovisionnement'}
+                >
+                  <i className="fas fa-shopping-cart me-2"></i>
+                  Créer une Demande
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="col-12 col-md-4">
             <div className="card">
               <div className="card-body text-center">
                 <i

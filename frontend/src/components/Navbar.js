@@ -142,6 +142,16 @@ export default function Navbar() {
                   Mouvements
                 </NavLink>
               </li>
+              <li className="nav-item">
+                <NavLink 
+                  className={`nav-link ${isActive('/demandes-reapprovisionnement') ? 'active' : ''}`} 
+                  to="/demandes-reapprovisionnement" 
+                  onClick={closeMenu}
+                >
+                  <i className="fas fa-shopping-cart me-2"></i>
+                  Demandes
+                </NavLink>
+              </li>
               {user?.role === 'admin' && (
                 <li className="nav-item">
                   <NavLink 

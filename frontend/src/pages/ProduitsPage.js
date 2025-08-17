@@ -254,10 +254,19 @@ export default function ProduitsPage() {
               Gérez votre catalogue de produits de nettoyage
             </p>
           </div>
-          <button className="btn btn-primary" onClick={openNewProductModal}>
-            <i className="fas fa-plus me-2"></i>
-            Nouveau Produit
-          </button>
+          <div className="d-flex gap-2">
+            <button 
+              className="btn btn-warning"
+              onClick={() => window.location.href = '/demandes-reapprovisionnement'}
+            >
+              <i className="fas fa-shopping-cart me-2"></i>
+              Demandes d'achat
+            </button>
+            <button className="btn btn-primary" onClick={openNewProductModal}>
+              <i className="fas fa-plus me-2"></i>
+              Nouveau Produit
+            </button>
+          </div>
         </div>
 
         {/* Error Display */}
