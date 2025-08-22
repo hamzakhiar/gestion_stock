@@ -10,6 +10,8 @@ export default function StockPage() {
   const [magasins, setMagasins] = useState([]);
   const [produits, setProduits] = useState([]);
   const [filters, setFilters] = useState({ magasin_id: '', produit_id: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const load = async () => {
     try {
@@ -91,9 +93,21 @@ export default function StockPage() {
     return data;
   }, [mouvements, magasins, produits, filters, calculateStockByMagasin]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(stockData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = stockData.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
   const onFilterChange = (key, value) => {
     const next = { ...filters, [key]: value };
     setFilters(next);
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   if (loading) return <Loading />;
@@ -132,8 +146,8 @@ export default function StockPage() {
             </tr>
           </thead>
           <tbody>
-            {stockData.length > 0 ? (
-              stockData.map((s) => (
+            {paginatedData.length > 0 ? (
+              paginatedData.map((s) => (
                 <tr key={s.id}>
                   <td>{s.magasin?.nom || s.magasin_id}</td>
                   <td>{s.produit?.nom || s.produit_id}</td>
@@ -154,6 +168,17 @@ export default function StockPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="d-flex justify-content-center mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
 }

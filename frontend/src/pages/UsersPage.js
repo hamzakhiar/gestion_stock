@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api';
 import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -9,6 +10,8 @@ export default function UsersPage() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'utilisateur' });
   const [formError, setFormError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const load = async () => {
     try {
@@ -87,6 +90,12 @@ export default function UsersPage() {
     setFormError(null);
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(users.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = users.slice(startIndex, endIndex);
+
   if (loading) return <Loading />;
 
   return (
@@ -126,6 +135,11 @@ export default function UsersPage() {
                 <i className="fas fa-list me-2"></i>
                 Utilisateurs ({users.length})
               </h3>
+              {totalPages > 1 && (
+                <div className="text-muted">
+                  Page {currentPage} sur {totalPages}
+                </div>
+              )}
               <div className="d-flex gap-2">
                 <button
                   className="btn btn-outline btn-sm"
@@ -156,7 +170,7 @@ export default function UsersPage() {
           </div>
           
           <div className="card-body p-0">
-            {users.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <div className="text-center py-5">
                 <i className="fas fa-users text-muted" style={{ fontSize: '3rem' }}></i>
                 <h4 className="text-muted mt-3">Aucun utilisateur trouvé</h4>
@@ -174,8 +188,8 @@ export default function UsersPage() {
                       <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                    {users.map((user) => (
+                                <tbody>
+                    {paginatedData.map((user) => (
                       <tr key={user.id}>
                         <td>
                           <div className="d-flex align-items-center">
@@ -367,6 +381,17 @@ export default function UsersPage() {
             </div>
           </div>
         </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         )}
       </div>
     </div>

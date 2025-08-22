@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import api, { extractApiError } from "../api";
 import Loading from "../components/Loading";
+import Pagination from "../components/Pagination";
 
 async function fetchAllMouvements() {
   const res = await api.get("/mouvements");
@@ -37,6 +38,8 @@ export default function ProduitsPage() {
 
   // Filter panel toggle state
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const load = async () => {
     try {
@@ -135,6 +138,17 @@ export default function ProduitsPage() {
 
     return filtered;
   }, [items, search, filters, filterLowStock, mouvements]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filtered.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filters, filterLowStock]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -244,6 +258,7 @@ export default function ProduitsPage() {
     });
     setSearch("");
     setFilterLowStock(false);
+    setCurrentPage(1);
   };
 
   if (loading) return <Loading />;
@@ -461,7 +476,7 @@ export default function ProduitsPage() {
           </div>
 
           <div className="card-body p-0">
-            {filtered.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <div className="text-center py-5">
                 <i
                   className="fas fa-box-open text-muted"
@@ -487,7 +502,7 @@ export default function ProduitsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((item) => {
+                    {paginatedData.map((item) => {
                       const currentStock = calculateCurrentStock(item.id);
                       const isLowStock =
                         item.seuil_critique &&
@@ -605,6 +620,17 @@ export default function ProduitsPage() {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
 
         {/* Add/Edit Modal */}
         {showModal && (

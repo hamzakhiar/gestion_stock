@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import api, { extractApiError } from '../api';
 import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 import { useAuth } from '../context/AuthContext';
 
 export default function DemandeReapprovisionnementPage() {
@@ -22,6 +23,8 @@ export default function DemandeReapprovisionnementPage() {
     date_limite: ''
   });
   const [editing, setEditing] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadData();
@@ -199,6 +202,17 @@ export default function DemandeReapprovisionnementPage() {
     });
   }, [demandes]);
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredDemandes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredDemandes.slice(startIndex, endIndex);
+
+  // Reset to first page when data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [demandes]);
+
   if (loading) return <Loading />;
 
   return (
@@ -283,6 +297,11 @@ export default function DemandeReapprovisionnementPage() {
                 <i className="fas fa-list me-2"></i>
                 Demandes ({filteredDemandes.length})
               </h3>
+              {totalPages > 1 && (
+                <div className="text-muted">
+                  Page {currentPage} sur {totalPages}
+                </div>
+              )}
               <div className="d-flex gap-2">
                 <button
                   className="btn btn-outline btn-sm"
@@ -322,7 +341,7 @@ export default function DemandeReapprovisionnementPage() {
           </div>
 
           <div className="card-body p-0">
-            {filteredDemandes.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <div className="text-center py-5">
                 <i className="fas fa-shopping-cart text-muted" style={{ fontSize: '3rem' }}></i>
                 <h4 className="text-muted mt-3">Aucune demande trouvée</h4>
@@ -346,7 +365,7 @@ export default function DemandeReapprovisionnementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredDemandes.map((demande) => (
+                    {paginatedData.map((demande) => (
                       <tr key={demande.id}>
                         <td>
                           <div>
@@ -443,6 +462,17 @@ export default function DemandeReapprovisionnementPage() {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
 
         {/* Add/Edit Modal */}
         {showModal && (

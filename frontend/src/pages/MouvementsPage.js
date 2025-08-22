@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import api from '../api';
 import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 
 export default function MouvementsPage() {
   const [mouvements, setMouvements] = useState([]);
@@ -17,6 +18,8 @@ export default function MouvementsPage() {
     key: 'created_at',
     direction: 'desc'
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [produits, setProduits] = useState([]);
   const [magasins, setMagasins] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -103,6 +106,17 @@ export default function MouvementsPage() {
 
     return filtered;
   }, [mouvements, filters, sortConfig]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filtered.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, sortConfig]);
 
   const clearFilters = () => {
     setFilters({
@@ -314,6 +328,11 @@ export default function MouvementsPage() {
               <span className="badge badge-primary ms-2">Filtré</span>
             )}
           </div>
+          {totalPages > 1 && (
+            <div className="text-muted">
+              Page {currentPage} sur {totalPages}
+            </div>
+          )}
         </div>
 
         {/* Movements Table */}
@@ -328,7 +347,7 @@ export default function MouvementsPage() {
           </div>
           
           <div className="card-body p-0">
-            {filtered.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <div className="text-center py-5">
                 <i className="fas fa-chart-line text-muted" style={{ fontSize: '3rem' }}></i>
                 <h4 className="text-muted mt-3">Aucun mouvement trouvé</h4>
@@ -405,8 +424,8 @@ export default function MouvementsPage() {
                       </th>
                     </tr>
                   </thead>
-              <tbody>
-                    {filtered.map((mouvement) => (
+                                <tbody>
+                    {paginatedData.map((mouvement) => (
                       <tr key={mouvement.id}>
                         <td>
                           <div>
@@ -459,6 +478,17 @@ export default function MouvementsPage() {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="d-flex justify-content-center mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
