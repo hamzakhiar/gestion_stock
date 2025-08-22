@@ -183,7 +183,15 @@ export default function ProduitsPage() {
       await api.delete(`/produits/${id}`);
       load();
     } catch (e) {
-      setError(extractApiError(e, "Erreur lors de la suppression"));
+      // Check if it's a foreign key constraint error
+      const errorMessage = e?.response?.data?.message || e?.message || '';
+      if (errorMessage.includes('foreign key constraint fails') || 
+          errorMessage.includes('Integrity constraint violation') ||
+          errorMessage.includes('Cannot delete or update a parent row')) {
+        setError("Le produit a des mouvements et ne peut pas être supprimé");
+      } else {
+        setError(extractApiError(e, "Erreur lors de la suppression"));
+      }
     }
   };
 

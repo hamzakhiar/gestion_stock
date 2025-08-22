@@ -30,18 +30,24 @@ export default function DemandeReapprovisionnementPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [dRes, pRes, mRes, uRes] = await Promise.all([
         api.get('/demandes-achat?with=produit,magasin,user'),
         api.get('/produits'),
         api.get('/magasins'),
         api.get('/users'),
       ]);
-      setDemandes(dRes.data || []);
-      setProduits(pRes.data || []);
-      setMagasins(mRes.data || []);
-      setUsers(uRes.data || []);
+      setDemandes(Array.isArray(dRes.data) ? dRes.data : []);
+      setProduits(Array.isArray(pRes.data) ? pRes.data : []);
+      setMagasins(Array.isArray(mRes.data) ? mRes.data : []);
+      setUsers(Array.isArray(uRes.data) ? uRes.data : []);
     } catch (e) {
       setError(extractApiError(e, 'Erreur de chargement des demandes'));
+      // Ensure arrays are set to empty arrays on error
+      setDemandes([]);
+      setProduits([]);
+      setMagasins([]);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -287,16 +293,16 @@ export default function DemandeReapprovisionnementPage() {
                        ...filteredDemandes.map(d => [
                          d.created_at ? new Date(d.created_at).toLocaleDateString('fr-FR') : '-',
                          d.produit?.nom || 
-                           produits.find(p => p.id === d.produit_id)?.nom || 
+                           (Array.isArray(produits) ? produits.find(p => p.id === d.produit_id)?.nom : null) || 
                            `Produit #${d.produit_id}`,
                          d.magasin?.nom || 
-                           magasins.find(m => m.id === d.magasin_id)?.nom || 
+                           (Array.isArray(magasins) ? magasins.find(m => m.id === d.magasin_id)?.nom : null) || 
                            `Magasin #${d.magasin_id}`,
                          d.quantite_demandee,
                          d.priorite,
                          d.statut,
                          d.user?.name || 
-                           users.find(u => u.id === d.user_id)?.name || 
+                           (Array.isArray(users) ? users.find(u => u.id === d.user_id)?.name : null) || 
                            `Utilisateur #${d.user_id}`,
                          d.commentaire || ''
                        ])
@@ -359,9 +365,9 @@ export default function DemandeReapprovisionnementPage() {
                            <div className="d-flex align-items-center">
                              <i className="fas fa-box text-primary me-2"></i>
                              <span>
-                               {demande.produit?.nom || 
-                                 produits.find(p => p.id === demande.produit_id)?.nom || 
-                                 `Produit #${demande.produit_id}`}
+                                                            {demande.produit?.nom || 
+                               (Array.isArray(produits) ? produits.find(p => p.id === demande.produit_id)?.nom : null) || 
+                               `Produit #${demande.produit_id}`}
                              </span>
                            </div>
                          </td>
@@ -369,9 +375,9 @@ export default function DemandeReapprovisionnementPage() {
                            <div className="d-flex align-items-center">
                              <i className="fas fa-warehouse text-info me-2"></i>
                              <span>
-                               {demande.magasin?.nom || 
-                                 magasins.find(m => m.id === demande.magasin_id)?.nom || 
-                                 `Magasin #${demande.magasin_id}`}
+                                                            {demande.magasin?.nom || 
+                               (Array.isArray(magasins) ? magasins.find(m => m.id === demande.magasin_id)?.nom : null) || 
+                               `Magasin #${demande.magasin_id}`}
                              </span>
                            </div>
                          </td>
@@ -390,9 +396,9 @@ export default function DemandeReapprovisionnementPage() {
                            <div className="d-flex align-items-center">
                              <i className="fas fa-user text-secondary me-2"></i>
                              <span>
-                               {demande.user?.name || 
-                                 users.find(u => u.id === demande.user_id)?.name || 
-                                 `Utilisateur #${demande.user_id}`}
+                                                            {demande.user?.name || 
+                               (Array.isArray(users) ? users.find(u => u.id === demande.user_id)?.name : null) || 
+                               `Utilisateur #${demande.user_id}`}
                              </span>
                            </div>
                          </td>
