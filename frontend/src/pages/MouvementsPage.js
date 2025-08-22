@@ -13,6 +13,10 @@ export default function MouvementsPage() {
     from: '', 
     to: '' 
   });
+  const [sortConfig, setSortConfig] = useState({
+    key: 'created_at',
+    direction: 'desc'
+  });
   const [produits, setProduits] = useState([]);
   const [magasins, setMagasins] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -39,7 +43,7 @@ export default function MouvementsPage() {
   }, []);
 
   const filtered = useMemo(() => {
-    return (mouvements || []).filter((m) => {
+    let filtered = (mouvements || []).filter((m) => {
       if (filters.type && m.type !== filters.type) return false;
       if (filters.produit_id && Number(filters.produit_id) !== Number(m.produit_id)) return false;
       if (filters.magasin_id && Number(filters.magasin_id) !== Number(m.magasin_id)) return false;
@@ -52,12 +56,53 @@ export default function MouvementsPage() {
         if (isFinite(d) && d > new Date(filters.to)) return false;
       }
       return true;
-    }).sort((a, b) => {
-      const dateA = new Date(a.created_at || a.updated_at || a.date || a.createdAt);
-      const dateB = new Date(b.created_at || b.updated_at || b.date || b.createdAt);
-      return dateB - dateA; // Most recent first
     });
-  }, [mouvements, filters]);
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortConfig.key) {
+        case 'created_at':
+          aValue = new Date(a.created_at || a.updated_at || a.date || a.createdAt);
+          bValue = new Date(b.created_at || b.updated_at || b.date || b.createdAt);
+          break;
+        case 'type':
+          aValue = (a.type || '').toLowerCase();
+          bValue = (b.type || '').toLowerCase();
+          break;
+        case 'produit':
+          aValue = (a.produit?.nom || '').toLowerCase();
+          bValue = (b.produit?.nom || '').toLowerCase();
+          break;
+        case 'magasin':
+          aValue = (a.magasin?.nom || '').toLowerCase();
+          bValue = (b.magasin?.nom || '').toLowerCase();
+          break;
+        case 'quantite':
+          aValue = Number(a.quantite || 0);
+          bValue = Number(b.quantite || 0);
+          break;
+        case 'user':
+          aValue = (a.user?.name || '').toLowerCase();
+          bValue = (b.user?.name || '').toLowerCase();
+          break;
+        default:
+          aValue = new Date(a.created_at || a.updated_at || a.date || a.createdAt);
+          bValue = new Date(b.created_at || b.updated_at || b.date || b.createdAt);
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return filtered;
+  }, [mouvements, filters, sortConfig]);
 
   const clearFilters = () => {
     setFilters({
@@ -67,6 +112,22 @@ export default function MouvementsPage() {
       from: '',
       to: ''
     });
+  };
+
+  const handleSort = (key) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <i className="fas fa-sort text-muted"></i>;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up text-primary"></i>
+      : <i className="fas fa-sort-down text-primary"></i>;
   };
 
   const getTypeBadge = (type) => {
@@ -282,14 +343,68 @@ export default function MouvementsPage() {
                 <table className="table mb-0">
                   <thead>
                     <tr>
-                      <th>Date & Heure</th>
-                      <th>Type</th>
-                      <th>Produit</th>
-                      <th>Magasin</th>
-                      <th>Quantité</th>
-                  <th>Utilisateur</th>
-                </tr>
-              </thead>
+                      <th 
+                        className="cursor-pointer"
+                        onClick={() => handleSort('created_at')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between">
+                          Date & Heure
+                          {getSortIcon('created_at')}
+                        </div>
+                      </th>
+                      <th 
+                        className="cursor-pointer"
+                        onClick={() => handleSort('type')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between">
+                          Type
+                          {getSortIcon('type')}
+                        </div>
+                      </th>
+                      <th 
+                        className="cursor-pointer"
+                        onClick={() => handleSort('produit')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between">
+                          Produit
+                          {getSortIcon('produit')}
+                        </div>
+                      </th>
+                      <th 
+                        className="cursor-pointer"
+                        onClick={() => handleSort('magasin')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between">
+                          Magasin
+                          {getSortIcon('magasin')}
+                        </div>
+                      </th>
+                      <th 
+                        className="cursor-pointer"
+                        onClick={() => handleSort('quantite')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between">
+                          Quantité
+                          {getSortIcon('quantite')}
+                        </div>
+                      </th>
+                      <th 
+                        className="cursor-pointer"
+                        onClick={() => handleSort('user')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="d-flex align-items-center justify-content-between">
+                          Utilisateur
+                          {getSortIcon('user')}
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
               <tbody>
                     {filtered.map((mouvement) => (
                       <tr key={mouvement.id}>

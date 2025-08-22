@@ -8,9 +8,17 @@ use Illuminate\Http\Request;
 class DemandeAchatController extends Controller
 {
     // Afficher toutes les demandes d'achat
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(DemandeAchat::all());
+        $query = DemandeAchat::query();
+        
+        // Load relationships if requested
+        if ($request->has('with')) {
+            $relations = explode(',', $request->get('with'));
+            $query->with($relations);
+        }
+        
+        return response()->json($query->get());
     }
 
     // Créer une nouvelle demande d'achat

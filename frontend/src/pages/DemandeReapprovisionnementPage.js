@@ -31,16 +31,15 @@ export default function DemandeReapprovisionnementPage() {
     try {
       setLoading(true);
       setError(null);
-      const [dRes, pRes, mRes, uRes] = await Promise.all([
+      const [dRes, pRes, mRes] = await Promise.all([
         api.get('/demandes-achat?with=produit,magasin,user'),
         api.get('/produits'),
         api.get('/magasins'),
-        api.get('/users'),
       ]);
       setDemandes(Array.isArray(dRes.data) ? dRes.data : []);
       setProduits(Array.isArray(pRes.data) ? pRes.data : []);
       setMagasins(Array.isArray(mRes.data) ? mRes.data : []);
-      setUsers(Array.isArray(uRes.data) ? uRes.data : []);
+      setUsers([]); // Not needed since user data is included in demandes
     } catch (e) {
       setError(extractApiError(e, 'Erreur de chargement des demandes'));
       // Ensure arrays are set to empty arrays on error
@@ -302,7 +301,6 @@ export default function DemandeReapprovisionnementPage() {
                          d.priorite,
                          d.statut,
                          d.user?.name || 
-                           (Array.isArray(users) ? users.find(u => u.id === d.user_id)?.name : null) || 
                            `Utilisateur #${d.user_id}`,
                          d.commentaire || ''
                        ])
@@ -397,7 +395,6 @@ export default function DemandeReapprovisionnementPage() {
                              <i className="fas fa-user text-secondary me-2"></i>
                              <span>
                                                             {demande.user?.name || 
-                               (Array.isArray(users) ? users.find(u => u.id === demande.user_id)?.name : null) || 
                                `Utilisateur #${demande.user_id}`}
                              </span>
                            </div>

@@ -263,13 +263,6 @@ export default function ProduitsPage() {
             </p>
           </div>
           <div className="d-flex gap-2">
-            <button 
-              className="btn btn-warning"
-              onClick={() => window.location.href = '/demandes-reapprovisionnement'}
-            >
-              <i className="fas fa-shopping-cart me-2"></i>
-              Demandes d'achat
-            </button>
             <button className="btn btn-primary" onClick={openNewProductModal}>
               <i className="fas fa-plus me-2"></i>
               Nouveau Produit
