@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import Loading from "../components/Loading";
 
@@ -23,6 +24,7 @@ async function fetchAllMouvements() {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [produits, setProduits] = useState([]);
@@ -290,7 +292,7 @@ export default function Dashboard() {
                 <p className="text-muted">
                   Ajouter un nouveau produit au catalogue
                 </p>
-                <button className="btn btn-primary">
+                <button className="btn btn-primary" onClick={() => navigate('/produits')}>
                   <i className="fas fa-plus me-2"></i>
                   Ajouter un Produit
                 </button>
@@ -331,7 +333,7 @@ export default function Dashboard() {
                 <p className="text-muted">
                   Effectuer un transfert entre magasins
                 </p>
-                <button className="btn btn-success">
+                <button className="btn btn-success" onClick={() => navigate('/transferts')}>
                   <i className="fas fa-exchange-alt me-2"></i>
                   Créer un Transfert
                 </button>
