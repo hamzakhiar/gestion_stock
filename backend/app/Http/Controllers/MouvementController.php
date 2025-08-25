@@ -3,12 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mouvement;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
+/**
+ * Contrôleur des mouvements de stock.
+ *
+ * Fournit des endpoints REST pour lister, créer, consulter, mettre à jour
+ * et supprimer des mouvements. La création et la mise à jour incluent une
+ * validation métier pour empêcher les sorties avec stock insuffisant.
+ */
 class MouvementController extends Controller
 {
-    // Lister tous les mouvements avec leurs relations
+    /**
+     * Lister tous les mouvements avec leurs relations.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         return response()->json(
@@ -16,7 +26,14 @@ class MouvementController extends Controller
         );
     }
 
-    // Créer un nouveau mouvement
+    /**
+     * Créer un nouveau mouvement.
+     *
+     * Règle métier: refuser une sortie si le stock disponible n'est pas suffisant.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -55,14 +72,27 @@ class MouvementController extends Controller
         return response()->json($mouvement, 201);
     }
 
-    // Afficher un mouvement spécifique
+    /**
+     * Afficher un mouvement spécifique.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show($id)
     {
         $mouvement = Mouvement::with(['produit', 'user', 'magasin'])->findOrFail($id);
         return response()->json($mouvement);
     }
 
-    // Mettre à jour un mouvement
+    /**
+     * Mettre à jour un mouvement.
+     *
+     * Règle métier: s'assurer que la mise à jour ne rend pas le stock négatif.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request, $id)
     {
         $mouvement = Mouvement::findOrFail($id);
@@ -111,7 +141,12 @@ class MouvementController extends Controller
         return response()->json($mouvement);
     }
 
-    // Supprimer un mouvement
+    /**
+     * Supprimer un mouvement.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy($id)
     {
         $mouvement = Mouvement::findOrFail($id);

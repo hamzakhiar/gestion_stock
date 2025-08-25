@@ -1,3 +1,4 @@
+// Page Demandes de Réapprovisionnement: création et suivi des demandes d'achat
 import React, { useEffect, useState, useMemo } from 'react';
 import api, { extractApiError } from '../api';
 import Loading from '../components/Loading';
@@ -9,7 +10,6 @@ export default function DemandeReapprovisionnementPage() {
   const [demandes, setDemandes] = useState([]);
   const [produits, setProduits] = useState([]);
   const [magasins, setMagasins] = useState([]);
-  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -19,8 +19,7 @@ export default function DemandeReapprovisionnementPage() {
     magasin_id: '',
     quantite_demandee: '',
     priorite: 'normale',
-    commentaire: '',
-    date_limite: ''
+    commentaire: ''
   });
   const [editing, setEditing] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,6 +29,7 @@ export default function DemandeReapprovisionnementPage() {
     loadData();
   }, []);
 
+  // Charge les demandes, produits et magasins
   const loadData = async () => {
     try {
       setLoading(true);
@@ -42,19 +42,18 @@ export default function DemandeReapprovisionnementPage() {
       setDemandes(Array.isArray(dRes.data) ? dRes.data : []);
       setProduits(Array.isArray(pRes.data) ? pRes.data : []);
       setMagasins(Array.isArray(mRes.data) ? mRes.data : []);
-      setUsers([]); // Not needed since user data is included in demandes
     } catch (e) {
       setError(extractApiError(e, 'Erreur de chargement des demandes'));
       // Ensure arrays are set to empty arrays on error
       setDemandes([]);
       setProduits([]);
       setMagasins([]);
-      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Ouvre la modale pour une nouvelle demande
   const openNewDemandeModal = () => {
     setEditing(null);
     setForm({
@@ -62,12 +61,12 @@ export default function DemandeReapprovisionnementPage() {
       magasin_id: '',
       quantite_demandee: '',
       priorite: 'normale',
-      commentaire: '',
-      date_limite: ''
+      commentaire: ''
     });
     setShowModal(true);
   };
 
+  // Ouvre la modale en mode édition pour une demande existante
   const openEditDemandeModal = (demande) => {
     setEditing(demande);
     setForm({
@@ -75,12 +74,12 @@ export default function DemandeReapprovisionnementPage() {
       magasin_id: demande.magasin_id || '',
       quantite_demandee: demande.quantite_demandee || '',
       priorite: demande.priorite || 'normale',
-      commentaire: demande.commentaire || '',
-      date_limite: demande.date_limite || ''
+      commentaire: demande.commentaire || ''
     });
     setShowModal(true);
   };
 
+  // Ferme la modale et réinitialise le formulaire
   const closeModal = () => {
     setShowModal(false);
     setEditing(null);
@@ -89,11 +88,11 @@ export default function DemandeReapprovisionnementPage() {
       magasin_id: '',
       quantite_demandee: '',
       priorite: 'normale',
-      commentaire: '',
-      date_limite: ''
+      commentaire: ''
     });
   };
 
+  // Soumet la création/mise à jour d'une demande
   const onSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -111,7 +110,6 @@ export default function DemandeReapprovisionnementPage() {
         quantite_demandee: Number(form.quantite_demandee),
         priorite: form.priorite,
         commentaire: form.commentaire.trim() || null,
-        date_limite: form.date_limite || null,
         user_id: user.id,
         statut: 'en_attente'
       };
@@ -131,6 +129,7 @@ export default function DemandeReapprovisionnementPage() {
     }
   };
 
+  // Supprime une demande sélectionnée
   const onDelete = async (id) => {
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) {
       return;
@@ -145,6 +144,7 @@ export default function DemandeReapprovisionnementPage() {
     }
   };
 
+  // Met à jour le statut d'une demande (admin)
   const updateStatut = async (id, newStatut) => {
     try {
       await api.patch(`/demandes-achat/${id}`, { statut: newStatut });
@@ -155,6 +155,7 @@ export default function DemandeReapprovisionnementPage() {
     }
   };
 
+  // Affiche un badge lisible pour le statut
   const getStatutBadge = (statut) => {
     const config = {
       'en_attente': { color: 'badge-warning', icon: 'fas fa-clock', text: 'En attente' },
@@ -174,6 +175,7 @@ export default function DemandeReapprovisionnementPage() {
     );
   };
 
+  // Affiche un badge lisible pour la priorité
   const getPrioriteBadge = (priorite) => {
     const config = {
       'basse': { color: 'badge-info', text: 'Basse' },
@@ -192,13 +194,41 @@ export default function DemandeReapprovisionnementPage() {
   };
 
   const filteredDemandes = useMemo(() => {
-    return demandes.sort((a, b) => {
-      // Sort by priority first, then by creation date
-      const priorityOrder = { 'urgente': 4, 'haute': 3, 'normale': 2, 'basse': 1 };
-      const priorityDiff = (priorityOrder[b.priorite] || 2) - (priorityOrder[a.priorite] || 2);
-      if (priorityDiff !== 0) return priorityDiff;
-      
-      return new Date(b.created_at) - new Date(a.created_at);
+    const priorityOrder = { 'urgente': 4, 'haute': 3, 'normale': 2, 'basse': 1 };
+    const statusWeight = {
+      'en_attente': 0,
+      'approuvee': 1,
+      'en_cours': 2,
+      'terminee': 3,
+      'rejetee': 4,
+    };
+
+    const toDate = (d) => new Date(d || 0).getTime();
+
+    return [...demandes].sort((a, b) => {
+      const aStatus = a.statut || 'en_attente';
+      const bStatus = b.statut || 'en_attente';
+      const aWeight = statusWeight[aStatus] ?? 99;
+      const bWeight = statusWeight[bStatus] ?? 99;
+
+      // Group by status weight first (en_attente first, then approuvee, then others)
+      if (aWeight !== bWeight) return aWeight - bWeight;
+
+      // For en_attente: sort by priority (desc), then date desc
+      if (aStatus === 'en_attente') {
+        const aPrio = priorityOrder[a.priorite] || 2;
+        const bPrio = priorityOrder[b.priorite] || 2;
+        if (aPrio !== bPrio) return bPrio - aPrio;
+        return toDate(b.created_at) - toDate(a.created_at);
+      }
+
+      // For approuvee: sort by date desc only
+      if (aStatus === 'approuvee') {
+        return toDate(b.created_at) - toDate(a.created_at);
+      }
+
+      // Default: date desc
+      return toDate(b.created_at) - toDate(a.created_at);
     });
   }, [demandes]);
 
@@ -218,7 +248,7 @@ export default function DemandeReapprovisionnementPage() {
   return (
     <div className="page-container">
       <div className="container">
-        {/* Header Section */}
+        {/* En-tête */}
         <div className="d-flex justify-content-between align-items-center mb-5">
           <div>
             <h1 className="mb-2">
@@ -237,7 +267,7 @@ export default function DemandeReapprovisionnementPage() {
           )}
         </div>
 
-        {/* Success/Error Messages */}
+        {/* Messages de succès/erreur */}
         {success && (
           <div className="alert alert-success mb-4">
             <i className="fas fa-check-circle me-2"></i>
@@ -251,7 +281,7 @@ export default function DemandeReapprovisionnementPage() {
           </div>
         )}
 
-        {/* Statistics Cards */}
+        {/* Cartes statistiques */}
         <div className="row g-4 mb-5">
           <div className="col-12 col-md-3">
             <div className="stat-card">
@@ -271,27 +301,9 @@ export default function DemandeReapprovisionnementPage() {
               <div className="stat-label">Approuvées</div>
             </div>
           </div>
-          <div className="col-12 col-md-3">
-            <div className="stat-card">
-              <div className="stat-number text-info">
-                <i className="fas fa-spinner me-3"></i>
-                {demandes.filter(d => d.statut === 'en_cours').length}
-              </div>
-              <div className="stat-label">En cours</div>
-            </div>
-          </div>
-          <div className="col-12 col-md-3">
-            <div className="stat-card">
-              <div className="stat-number text-secondary">
-                <i className="fas fa-flag-checkered me-3"></i>
-                {demandes.filter(d => d.statut === 'terminee').length}
-              </div>
-              <div className="stat-label">Terminées</div>
-            </div>
-          </div>
         </div>
 
-        {/* Demandes Table */}
+        {/* Tableau des demandes */}
         <div className="card">
           <div className="card-header">
             <div className="d-flex justify-content-between align-items-center">
@@ -476,7 +488,7 @@ export default function DemandeReapprovisionnementPage() {
           </div>
         )}
 
-        {/* Add/Edit Modal */}
+        {/* Modale d'ajout/édition */}
         {showModal && (
           <div
             className="modal show d-block"
@@ -578,19 +590,7 @@ export default function DemandeReapprovisionnementPage() {
                         </div>
                       </div>
 
-                      <div className="col-12 col-md-6">
-                        <div className="form-group">
-                          <label className="form-label">Date limite</label>
-                          <input
-                            type="date"
-                            className="form-control"
-                            value={form.date_limite}
-                            onChange={(e) =>
-                              setForm({ ...form, date_limite: e.target.value })
-                            }
-                          />
-                        </div>
-                      </div>
+                      
 
                       <div className="col-12">
                         <div className="form-group">

@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * Modèle Eloquent pour les mouvements de stock.
+ *
+ * Représente une entrée, une sortie ou un transfert, avec des relations
+ * vers le produit, l'utilisateur et le magasin.
+ */
 class Mouvement extends Model
 {
     use HasFactory;

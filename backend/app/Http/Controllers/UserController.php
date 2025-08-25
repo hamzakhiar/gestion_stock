@@ -6,10 +6,22 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+/**
+ * Contrôleur de gestion des utilisateurs.
+ *
+ * Expose des endpoints REST pour administrer les comptes: liste, création,
+ * consultation, mise à jour et suppression. L'accès est restreint aux admins
+ * pour les opérations sensibles (liste, création, suppression).
+ */
 class UserController extends Controller
 {
     /**
      * Lister tous les utilisateurs.
+     */
+    /**
+     * Lister tous les utilisateurs (admin requis).
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
@@ -25,6 +37,12 @@ class UserController extends Controller
 
     /**
      * Créer un nouvel utilisateur.POST
+     */
+    /**
+     * Créer un nouvel utilisateur (admin requis).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -52,6 +70,12 @@ class UserController extends Controller
     /**
      * Afficher un utilisateur spécifique.GET
      */
+    /**
+     * Afficher un utilisateur spécifique.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show($id)
     {
         $user = User::find($id);
@@ -68,6 +92,13 @@ class UserController extends Controller
 
     /**
      * Mettre à jour un utilisateur.
+     */
+    /**
+     * Mettre à jour un utilisateur.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
@@ -100,6 +131,12 @@ class UserController extends Controller
 
     /**
      * Supprimer un utilisateur.DELETE
+     */
+    /**
+     * Supprimer un utilisateur (admin requis).
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
     {

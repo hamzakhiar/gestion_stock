@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api';
+import api, { extractApiError } from '../api';
 import Loading from '../components/Loading';
 import Pagination from '../components/Pagination';
 
@@ -48,7 +48,7 @@ export default function UsersPage() {
       const payload = { name: form.name, email: form.email, role: form.role };
       if (form.password) payload.password = form.password;
       
-      if (editing) {
+      if (editing && editing.id) {
         await api.put(`/users/${editing.id}`, payload);
       } else {
         await api.post('/users', payload);
@@ -58,7 +58,7 @@ export default function UsersPage() {
       setEditing(null);
       setForm({ name: '', email: '', password: '', role: 'utilisateur' });
     } catch (e) {
-      setFormError('Erreur lors de la sauvegarde');
+      setFormError(extractApiError(e, 'Erreur lors de la sauvegarde'));
     }
   };
 

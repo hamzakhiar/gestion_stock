@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * Modèle Eloquent pour les demandes d'achat.
+ *
+ * Représente une demande de réapprovisionnement avec ses relations
+ * vers le produit, le magasin et l'utilisateur demandeur.
+ */
 class DemandeAchat extends Model
 {
     use HasFactory;
@@ -16,6 +22,7 @@ class DemandeAchat extends Model
     protected $fillable = [
         'produit_id',
         'quantite_demandee',
+        'priorite',
         'statut',
         'user_id',
         'magasin_id',

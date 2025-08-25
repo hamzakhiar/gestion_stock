@@ -1,8 +1,16 @@
+// Page Stocks: vue consolidée des stocks par magasin et par produit
 import React, { useEffect, useState, useMemo } from 'react';
 import api from '../api';
 import Loading from '../components/Loading';
 import Pagination from '../components/Pagination';
 
+/**
+ * Composant StockPage
+ *
+ * - Charge les mouvements, magasins et produits
+ * - Calcule le stock courant par (magasin, produit)
+ * - Offre des filtres et une exportation CSV
+ */
 export default function StockPage() {
   const [mouvements, setMouvements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +22,7 @@ export default function StockPage() {
   const itemsPerPage = 10;
   const [showFilters, setShowFilters] = useState(false);
 
+  // Charge la liste des mouvements
   const load = async () => {
     try {
       setLoading(true);
@@ -40,10 +49,9 @@ export default function StockPage() {
       }
     })();
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Calculate current stock for each product per store based on movements
+  // Calcule le stock courant par couple (magasin, produit) à partir des mouvements
   const calculateStockByMagasin = useMemo(() => {
     const stockMap = new Map();
     
@@ -61,7 +69,7 @@ export default function StockPage() {
     return stockMap;
   }, [mouvements]);
 
-  // Generate stock data for display
+  // Construit les lignes de stock à afficher (avec application des filtres)
   const stockData = useMemo(() => {
     const data = [];
     const processedKeys = new Set();
@@ -94,23 +102,25 @@ export default function StockPage() {
     return data;
   }, [mouvements, magasins, produits, filters, calculateStockByMagasin]);
 
-  // Pagination logic
+  // Logique de pagination
   const totalPages = Math.ceil(stockData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = stockData.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
+  // Réinitialise la pagination lorsque les filtres changent
   useEffect(() => {
     setCurrentPage(1);
   }, [filters]);
 
+  // Met à jour un filtre (magasin ou produit)
   const onFilterChange = (key, value) => {
     const next = { ...filters, [key]: value };
     setFilters(next);
     setCurrentPage(1); // Reset to first page when filter changes
   };
 
+  // Efface tous les filtres
   const clearFilters = () => {
     setFilters({ magasin_id: '', produit_id: '' });
   };
@@ -130,7 +140,7 @@ export default function StockPage() {
   return (
     <div className="page-container">
       <div className="container">
-        {/* Header Section */}
+        {/* En-tête */}
         <div className="d-flex justify-content-between align-items-center mb-5">
           <div>
             <h1 className="mb-2">
@@ -173,7 +183,7 @@ export default function StockPage() {
           </div>
         </div>
 
-        {/* Error Display */}
+        {/* Affichage des erreurs */}
         {error && (
           <div className="alert alert-danger mb-4">
             <i className="fas fa-exclamation-triangle me-2"></i>
@@ -181,7 +191,7 @@ export default function StockPage() {
           </div>
         )}
 
-        {/* Filters Section */}
+        {/* Section filtres */}
         {showFilters && (
           <div className="card mb-4">
             <div className="card-body">
@@ -237,7 +247,7 @@ export default function StockPage() {
           </div>
         )}
 
-        {/* Results Summary */}
+        {/* Résumé des résultats */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <span className="text-muted">
@@ -254,7 +264,7 @@ export default function StockPage() {
           )}
         </div>
 
-        {/* Stocks Table */}
+        {/* Tableau des stocks */}
         <div className="card">
           <div className="card-header">
             <div className="d-flex justify-content-between align-items-center">
