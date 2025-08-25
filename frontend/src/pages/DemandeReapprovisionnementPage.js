@@ -229,10 +229,12 @@ export default function DemandeReapprovisionnementPage() {
               Gérez les demandes d'achat pour réapprovisionner le stock
             </p>
           </div>
-          <button className="btn btn-primary" onClick={openNewDemandeModal}>
-            <i className="fas fa-plus me-2"></i>
-            Nouvelle Demande
-          </button>
+          {user?.role !== 'admin' && (
+            <button className="btn btn-primary" onClick={openNewDemandeModal}>
+              <i className="fas fa-plus me-2"></i>
+              Nouvelle Demande
+            </button>
+          )}
         </div>
 
         {/* Success/Error Messages */}
