@@ -49,8 +49,7 @@ export default function Navbar() {
       <div className="container">
         {/* Brand - Left aligned */}
         <Link className="navbar-brand" to="/" onClick={closeMenu}>
-          <i className="fas fa-warehouse me-2"></i>
-          Stock Nettoyage
+          <img src="/logo.jpeg" alt="Logo" style={{ height: '80px', width: 'auto' }} />
         </Link>
         
         {/* Mobile toggle button */}

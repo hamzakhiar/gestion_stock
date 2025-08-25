@@ -151,22 +151,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
-          <div className="col-12 col-md-4">
-            <div className="stat-card">
-              <div className="stat-number text-info">
-                <i className="fas fa-list me-3"></i>
-                {stocks.length}
-              </div>
-              <div className="stat-label">Lignes de Stock</div>
-              <div className="mt-3">
-                <small className="text-muted">
-                  <i className="fas fa-info-circle me-1"></i>
-                  Entrées de stock totales
-                </small>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Low Stock Alerts */}

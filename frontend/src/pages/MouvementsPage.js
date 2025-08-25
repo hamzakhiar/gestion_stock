@@ -148,7 +148,8 @@ export default function MouvementsPage() {
     const typeConfig = {
       'entrée': { color: 'badge-success', icon: 'fas fa-sign-in-alt' },
       'sortie': { color: 'badge-danger', icon: 'fas fa-sign-out-alt' },
-      'transfert': { color: 'badge-primary', icon: 'fas fa-exchange-alt' }
+      // Utiliser une couleur d'information (bleu) pour bien différencier du vert d'entrée
+      'transfert': { color: 'badge-info', icon: 'fas fa-exchange-alt' }
     };
     
     const config = typeConfig[type?.toLowerCase()] || { color: 'badge-secondary', icon: 'fas fa-question' };

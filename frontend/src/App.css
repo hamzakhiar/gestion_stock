@@ -1,19 +1,19 @@
 /* Modern Professional CSS Framework */
 
 :root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --secondary-color: #64748b;
+  --primary-color: #007C3D;
+  --primary-hover: #006B3C;
+  --secondary-color: #FEC430;
   --success-color: #059669;
-  --warning-color: #d97706;
+  --warning-color: #FEC430;
   --danger-color: #dc2626;
-  --info-color: #0891b2;
+  --info-color: #005C92;
   
-  --light-bg: #f8fafc;
-  --card-bg: #ffffff;
+  --light-bg: #FFFFFF;
+  --card-bg: #FFFFFF;
   --border-color: #e2e8f0;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
+  --text-primary: #006B3C;
+  --text-secondary: #006B3C;
   --text-muted: #94a3b8;
   
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -26,6 +26,7 @@
   --border-radius-xl: 1rem;
   
   --transition: all 0.2s ease-in-out;
+  --soft-green: #34D399; /* soft green distinct from primary */
 }
 
 * {
@@ -96,7 +97,7 @@ h6 { font-size: 1rem; }
 
 .card-title {
   margin-bottom: 0.75rem;
-  color: var(--text-primary);
+  color: #000000; /* Make card titles black */
   font-weight: 600;
 }
 
@@ -163,12 +164,12 @@ h6 { font-size: 1rem; }
 .btn-outline {
   background-color: transparent;
   border-color: var(--border-color);
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .btn-outline:hover {
-  background-color: var(--light-bg);
-  border-color: var(--text-secondary);
+  background-color: #f6f9fc;
+  border-color: var(--text-primary);
 }
 
 .btn-sm {
@@ -192,7 +193,7 @@ h6 { font-size: 1rem; }
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #000000; /* Make form labels black */
 }
 
 .form-control {
@@ -210,7 +211,7 @@ h6 { font-size: 1rem; }
 .form-control:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 124, 61, 0.15);
 }
 
 .form-control:disabled {
@@ -269,19 +270,19 @@ h6 { font-size: 1rem; }
 
 .alert-success {
   color: #065f46;
-  background-color: #f0fdf4;
+  background-color: #ecfdf5;
   border-color: #bbf7d0;
 }
 
 .alert-warning {
   color: #92400e;
-  background-color: #fffbeb;
-  border-color: #fed7aa;
+  background-color: #fff7e0; /* cooler warning tint */
+  border-color: #fde68a;
 }
 
 .alert-info {
   color: #0c4a6e;
-  background-color: #f0f9ff;
+  background-color: #e0f2fe;
   border-color: #bae6fd;
 }
 
@@ -324,8 +325,8 @@ h6 { font-size: 1rem; }
 }
 
 .badge-secondary {
-  background-color: var(--secondary-color);
-  color: white;
+  background-color: #e7edf3;
+  color: #0f172a;
 }
 
 /* Tables */
@@ -345,22 +346,42 @@ h6 { font-size: 1rem; }
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Professional table header: neutral background, brand-colored underline */
+.table thead tr {
+  border-bottom: 2px solid var(--primary-color);
+}
+
 .table th {
-  background-color: var(--light-bg);
+  background-color: #FFFFFF;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #000000; /* Make table headers black */
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
 }
 
+/* Make key headings and labels black for higher contrast */
+.card-title { color: #000000; }
+.form-label { color: #000000; }
+
 .table tbody tr:hover {
-  background-color: var(--light-bg);
+  background-color: #F1F5F9; /* subtle cool hover */
+}
+
+/* Zebra rows for readability */
+.table tbody tr:nth-child(even) {
+  background-color: #F8FAFC; /* soft cool gray */
+}
+
+/* Selected row accent */
+.table tbody tr.selected {
+  outline: 2px solid var(--primary-color);
 }
 
 /* Navigation */
+/* Navbar: solid primary for a cleaner, colder look */
 .navbar {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+  background: var(--primary-color);
   box-shadow: var(--shadow-lg);
   padding: 0.75rem 0;
   position: sticky;
@@ -687,10 +708,11 @@ h6 { font-size: 1rem; }
   box-shadow: var(--shadow-xl);
 }
 
+/* Make stat numbers use tertiary to reduce green dominance */
 .stat-number {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--primary-color);
+  color: var(--info-color);
   margin-bottom: 0.5rem;
   line-height: 1;
 }
@@ -813,6 +835,12 @@ h6 { font-size: 1rem; }
   border-radius: 50%;
   border-top-color: var(--primary-color);
   animation: spin 1s ease-in-out infinite;
+}
+
+/* Spinner inside buttons: use a softer green to differ from primary button */
+.btn .loading-spinner {
+  margin-right: 0.5rem;
+  border-top-color: var(--soft-green);
 }
 
 @keyframes spin {
@@ -1187,6 +1215,91 @@ h6 { font-size: 1rem; }
   border-top: 1px solid var(--border-color) !important;
 }
 
+/* Interactive states */
+.btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 124, 61, 0.15);
+}
+
+.btn-warning:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(254, 196, 48, 0.25);
+}
+
+.btn-outline:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.15);
+}
+
+/* Tertiary button style (info) for secondary CTAs */
+.btn-tertiary {
+  background-color: var(--info-color);
+  border-color: var(--info-color);
+  color: #FFFFFF;
+}
+
+.btn-tertiary:hover:not(:disabled) {
+  background-color: #00436b;
+  border-color: #00436b;
+}
+
+/* Links: clear hierarchy and feedback */
+a { color: var(--info-color); text-decoration: none; }
+a:hover { color: #00436b; text-decoration: underline; }
+a:active { color: #003355; }
+
+/* Pagination */
+.pagination {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.pagination .page-link {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  background: #FFFFFF;
+  transition: var(--transition);
+}
+
+.pagination .page-link:hover {
+  background: #F1F5F9;
+}
+
+.pagination .page-link.active {
+  background: var(--primary-color);
+  color: #FFFFFF;
+  border-color: var(--primary-color);
+}
+
+.pagination .page-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Form validation states */
+.form-control.is-invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-control.is-valid {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Table selected/active row */
+.table tbody tr.selected {
+  background-color: rgba(0, 92, 146, 0.08);
+  outline: 1px solid var(--info-color);
+}
+
 /* Print Styles */
 @media print {
   .navbar,
@@ -1203,4 +1316,21 @@ h6 { font-size: 1rem; }
     box-shadow: none !important;
     border: 1px solid #000 !important;
   }
+}
+
+/* Soft green button distinct from primary */
+.btn-soft {
+  background-color: var(--soft-green);
+  border-color: var(--soft-green);
+  color: #053B2C; /* dark text for contrast */
+}
+
+.btn-soft:hover:not(:disabled) {
+  background-color: #2FB487;
+  border-color: #2FB487;
+}
+
+.btn-soft:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.25);
 }
