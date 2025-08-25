@@ -44,7 +44,7 @@ export default function TransferPage() {
       return;
     }
     try {
-      // Create sortie
+      // Create sortie (will fail with 422 if stock insuffisant)
       const sortieRes = await api.post('/mouvements', {
         type: 'sortie',
         produit_id: Number(produit_id),
@@ -52,7 +52,7 @@ export default function TransferPage() {
         user_id: user.id,
         magasin_id: Number(source_id),
       });
-      // Create entree
+      // Create entree only if sortie succeeded
       const entreeRes = await api.post('/mouvements', {
         type: 'transfert',
         produit_id: Number(produit_id),

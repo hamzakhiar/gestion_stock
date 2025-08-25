@@ -73,18 +73,16 @@ export default function BonSortiePage() {
     }
 
     try {
-      // Create sortie movements for each item
-      const promises = validItems.map(item => 
-        api.post('/mouvements', {
+      // Create sortie movements sequentially to stop on first failure
+      for (const item of validItems) {
+        await api.post('/mouvements', {
           type: 'sortie',
           produit_id: Number(item.produit_id),
           quantite: Number(item.quantite),
           user_id: user.id,
           magasin_id: Number(form.magasin_id),
-        })
-      );
-
-      await Promise.all(promises);
+        });
+      }
       setSuccess('Bon de sortie créé avec succès');
       setForm({ magasin_id: '', items: [{ produit_id: '', quantite: '' }] });
     } catch (e) {

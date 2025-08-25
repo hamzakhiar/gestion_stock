@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mouvement;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class MouvementController extends Controller
@@ -27,6 +28,27 @@ class MouvementController extends Controller
             'reference_id' => 'nullable|integer',
             'created_at'   => 'nullable|date',
         ]);
+
+        // Validation stock: empêcher une sortie si stock insuffisant
+        if ($validated['type'] === 'sortie') {
+            $stock = Mouvement::where('produit_id', $validated['produit_id'])
+                ->where('magasin_id', $validated['magasin_id'])
+                ->get()
+                ->reduce(function ($total, $m) {
+                    $delta = in_array($m->type, ['entrée', 'transfert']) ? (int)$m->quantite : -(int)$m->quantite;
+                    return $total + $delta;
+                }, 0);
+
+            if ((int)$validated['quantite'] > $stock) {
+                return response()->json([
+                    'message' => 'Stock insuffisant pour effectuer la sortie.',
+                    'details' => [
+                        'disponible' => $stock,
+                        'demande' => (int)$validated['quantite'],
+                    ],
+                ], 422);
+            }
+        }
 
         $mouvement = Mouvement::create($validated);
 
@@ -54,6 +76,35 @@ class MouvementController extends Controller
             'reference_id' => 'nullable|integer',
             'created_at'   => 'nullable|date',
         ]);
+
+        // Validation stock lors de la mise à jour: s'assurer que le stock ne devient pas négatif
+        if (isset($validated['type']) || isset($validated['quantite']) || isset($validated['magasin_id']) || isset($validated['produit_id'])) {
+            $newType = $validated['type'] ?? $mouvement->type;
+            $newQuantite = isset($validated['quantite']) ? (int)$validated['quantite'] : (int)$mouvement->quantite;
+            $newMagasinId = $validated['magasin_id'] ?? $mouvement->magasin_id;
+            $newProduitId = $validated['produit_id'] ?? $mouvement->produit_id;
+
+            // Stock actuel en excluant ce mouvement
+            $stockSansCourant = Mouvement::where('produit_id', $newProduitId)
+                ->where('magasin_id', $newMagasinId)
+                ->where('id', '<>', $mouvement->id)
+                ->get()
+                ->reduce(function ($total, $m) {
+                    $delta = in_array($m->type, ['entrée', 'transfert']) ? (int)$m->quantite : -(int)$m->quantite;
+                    return $total + $delta;
+                }, 0);
+
+            $deltaNouveau = in_array($newType, ['entrée', 'transfert']) ? $newQuantite : -$newQuantite;
+            if (($stockSansCourant + $deltaNouveau) < 0) {
+                return response()->json([
+                    'message' => 'Stock insuffisant après mise à jour du mouvement.',
+                    'details' => [
+                        'disponible' => $stockSansCourant,
+                        'demande' => $newQuantite,
+                    ],
+                ], 422);
+            }
+        }
 
         $mouvement->update($validated);
 
