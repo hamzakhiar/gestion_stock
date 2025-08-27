@@ -251,7 +251,7 @@ export default function DemandeReapprovisionnementPage() {
         {/* En-tête */}
         <div className="d-flex justify-content-between align-items-center mb-5">
           <div>
-            <h1 className="mb-2">
+            <h1 className="mb-2" style={{ color: '#000000' }}>
               <i className="fas fa-shopping-cart text-primary me-3"></i>
               Demandes de Réapprovisionnement
             </h1>
@@ -318,7 +318,7 @@ export default function DemandeReapprovisionnementPage() {
               )}
               <div className="d-flex gap-2">
                 <button
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-action-neutral"
                   onClick={() => {
                                          const csv = [
                        ['Date', 'Produit', 'Magasin', 'Quantité', 'Priorité', 'Statut', 'Demandeur', 'Commentaire'],

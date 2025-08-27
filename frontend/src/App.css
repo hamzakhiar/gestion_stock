@@ -9,7 +9,7 @@
   --danger-color: #dc2626;
   --info-color: #005C92;
   
-  --light-bg: #FFFFFF;
+  --light-bg: #f8fafc;
   --card-bg: #FFFFFF;
   --border-color: #e2e8f0;
   --text-primary: #006B3C;
@@ -27,6 +27,14 @@
   
   --transition: all 0.2s ease-in-out;
   --soft-green: #34D399; /* soft green distinct from primary */
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #d4a017; /* Darker shade of warning color */
+  border-color: #d4a017;
+  color: white; 
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 * {
@@ -219,6 +227,18 @@ h6 { font-size: 1rem; }
   cursor: not-allowed;
 }
 
+/* Force select inputs (filters) to use black text */
+select.form-control { color: #000000; }
+select.form-control option { color: #000000; }
+
+/* Force date inputs to show black text (including WebKit date parts) */
+input.form-control[type="date"] { color: #000000 !important; }
+input.form-control[type="date"]::-webkit-datetime-edit { color: #000000; }
+input.form-control[type="date"]::-webkit-datetime-edit-text { color: #000000; }
+input.form-control[type="date"]::-webkit-datetime-edit-month-field { color: #000000; }
+input.form-control[type="date"]::-webkit-datetime-edit-day-field { color: #000000; }
+input.form-control[type="date"]::-webkit-datetime-edit-year-field { color: #000000; }
+
 /* Form Checkboxes */
 .form-check {
   display: flex;
@@ -352,9 +372,9 @@ h6 { font-size: 1rem; }
 }
 
 .table th {
-  background-color: #FFFFFF;
+  background-color: var(--light-bg);
   font-weight: 600;
-  color: #000000; /* Make table headers black */
+  color: var(--text-primary);
   text-transform: uppercase;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
@@ -1333,4 +1353,21 @@ a:active { color: #003355; }
 .btn-soft:focus {
   outline: none;
   box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.25);
+}
+
+/* Neutral action style for secondary buttons like Filtres / Exporter CSV */
+.btn-action-neutral {
+  color: #64748b !important;
+}
+
+.btn-action-neutral i {
+  color: #64748b !important;
+}
+
+.btn-action-neutral:hover {
+  color: #4b5563 !important;
+}
+
+.btn-action-neutral:hover i {
+  color: #4b5563 !important;
 }

@@ -269,7 +269,7 @@ export default function ProduitsPage() {
         {/* Header Section */}
         <div className="d-flex justify-content-between align-items-center mb-5">
           <div>
-            <h1 className="mb-2">
+            <h1 className="mb-2" style={{ color: '#000000' }}>
               <i className="fas fa-boxes text-primary me-3"></i>
               Gestion des Produits
             </h1>
@@ -326,6 +326,7 @@ export default function ProduitsPage() {
                     <label
                       className="form-check-label"
                       htmlFor="filterLowStock"
+                      style={{ color: '#000000' }}
                     >
                       Stock bas uniquement
                     </label>
@@ -334,6 +335,7 @@ export default function ProduitsPage() {
                   <button
                     className="btn btn-outline btn-sm"
                     onClick={() => setShowFilters(!showFilters)}
+                    style={{ color: '#64748b' }}
                   >
                     <i className="fas fa-filter me-1"></i>
                     Filtres avancés
@@ -342,6 +344,7 @@ export default function ProduitsPage() {
                   <button
                     className="btn btn-outline btn-sm"
                     onClick={clearFilters}
+                    style={{ color: '#64748b' }}
                   >
                     <i className="fas fa-times me-1"></i>
                     Effacer
@@ -437,7 +440,7 @@ export default function ProduitsPage() {
               </h3>
               <div className="d-flex gap-2">
                 <button
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-action-neutral"
                   onClick={() => {
                     const csv = [
                       [

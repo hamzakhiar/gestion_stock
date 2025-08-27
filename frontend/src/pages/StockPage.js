@@ -143,7 +143,7 @@ export default function StockPage() {
         {/* En-tête */}
         <div className="d-flex justify-content-between align-items-center mb-5">
           <div>
-            <h1 className="mb-2">
+            <h1 className="mb-2" style={{ color: '#000000' }}>
               <i className="fas fa-warehouse text-primary me-3"></i>
               Stocks par Magasin
             </h1>
@@ -151,14 +151,14 @@ export default function StockPage() {
           </div>
           <div className="d-flex gap-2">
             <button
-              className="btn btn-outline btn-sm"
+              className="btn btn-outline btn-sm btn-action-neutral"
               onClick={() => setShowFilters(!showFilters)}
             >
               <i className="fas fa-filter me-1"></i>
               Filtres
             </button>
             <button
-              className="btn btn-outline btn-sm"
+              className="btn btn-outline btn-sm btn-action-neutral"
               onClick={() => {
                 const csv = [
                   ['Magasin', 'Produit', 'Quantité'],

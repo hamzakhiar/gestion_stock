@@ -170,7 +170,7 @@ export default function MouvementsPage() {
         {/* Header Section */}
         <div className="d-flex justify-content-between align-items-center mb-5">
             <div>
-            <h1 className="mb-2">
+            <h1 className="mb-2" style={{ color: '#000000' }}>
               <i className="fas fa-chart-line text-primary me-3"></i>
               Historique des Mouvements
               </h1>
@@ -178,14 +178,14 @@ export default function MouvementsPage() {
             </div>
           <div className="d-flex gap-2">
             <button
-              className="btn btn-outline btn-sm"
+              className="btn btn-outline btn-sm btn-action-neutral"
               onClick={() => setShowFilters(!showFilters)}
             >
               <i className="fas fa-filter me-1"></i>
               Filtres
             </button>
             <button
-              className="btn btn-outline btn-sm"
+              className="btn btn-outline btn-sm btn-action-neutral"
               onClick={() => {
                 const csv = [
                   ['Date', 'Type', 'Produit', 'Magasin', 'Quantité', 'Utilisateur'],

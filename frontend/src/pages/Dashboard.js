@@ -97,7 +97,7 @@ export default function Dashboard() {
         {/* Header Section */}
         <div className="d-flex justify-content-between align-items-center mb-5">
           <div>
-            <h1 className="mb-2">
+            <h1 className="mb-2" style={{ color: '#000000' }}>
               <i className="fas fa-tachometer-alt me-3 text-primary"></i>
               Tableau de Bord
             </h1>

@@ -142,7 +142,7 @@ export default function UsersPage() {
               )}
               <div className="d-flex gap-2">
                 <button
-                  className="btn btn-outline btn-sm"
+                  className="btn btn-outline btn-sm btn-action-neutral"
                   onClick={() => {
                     const csv = [
                       ['Nom', 'Email', 'Rôle', 'Date de création'],
