@@ -83,7 +83,7 @@ export default function LoginPage() {
                   
                   <button 
                     type="submit" 
-                    className={`btn ${loading ? 'btn-soft' : 'btn-primary'} w-100 btn-lg`} 
+                    className={`btn ${loading ? 'btn-soft' : 'btn-primary'} w-100 btn-lg login-button`} 
                     disabled={loading}
                   >
                     {loading ? (

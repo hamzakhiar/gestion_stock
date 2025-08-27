@@ -13,7 +13,6 @@ class CreateProduitsTable extends Migration
             $table->string('nom', 100);
             $table->string('categorie', 50);
             $table->string('fournisseur', 100);
-            $table->date('date_peremption')->nullable();
             $table->integer('seuil_critique')->default(5);
             $table->timestamps();
             

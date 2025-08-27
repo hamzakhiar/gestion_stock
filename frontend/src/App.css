@@ -29,6 +29,12 @@
   --soft-green: #34D399; /* soft green distinct from primary */
 }
 
+/* Alternative approach: Force exact height for login button */
+.login-button {
+  height: 52px !important; /* Force exact height */
+  min-height: 52px !important;
+}
+
 .btn-warning:hover:not(:disabled) {
   background-color: #d4a017; /* Darker shade of warning color */
   border-color: #d4a017;

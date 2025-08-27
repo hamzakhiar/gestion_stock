@@ -20,7 +20,6 @@ class ProduitController extends Controller
             'nom'             => 'required|string|max:100',
             'categorie'       => 'required|string|max:50',
             'fournisseur'     => 'required|string|max:100',
-            'date_peremption' => 'nullable|date',
             'seuil_critique'  => 'nullable|integer|min:0',
         ]);
 
@@ -45,7 +44,6 @@ class ProduitController extends Controller
             'nom'             => 'sometimes|required|string|max:100',
             'categorie'       => 'sometimes|required|string|max:50',
             'fournisseur'     => 'sometimes|required|string|max:100',
-            'date_peremption' => 'nullable|date',
             'seuil_critique'  => 'nullable|integer|min:0',
         ]);
 

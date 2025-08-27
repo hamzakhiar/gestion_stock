@@ -21,7 +21,6 @@ export default function ProduitsPage() {
     nom: "",
     categorie: "",
     fournisseur: "",
-    date_peremption: "",
     seuil_critique: "",
   });
   const [mouvements, setMouvements] = useState([]);
@@ -32,7 +31,6 @@ export default function ProduitsPage() {
     fournisseur: "",
     stockMin: "",
     stockMax: "",
-    datePeremption: "",
     seuilCritique: "",
   });
 
@@ -164,7 +162,6 @@ export default function ProduitsPage() {
       nom: form.nom.trim(),
       categorie: form.categorie.trim() || null,
       fournisseur: form.fournisseur.trim() || null,
-      date_peremption: form.date_peremption || null,
       seuil_critique: form.seuil_critique ? Number(form.seuil_critique) : null,
     };
 
@@ -178,7 +175,6 @@ export default function ProduitsPage() {
         nom: "",
         categorie: "",
         fournisseur: "",
-        date_peremption: "",
         seuil_critique: "",
       });
       setEditing(null);
@@ -215,7 +211,6 @@ export default function ProduitsPage() {
       nom: item.nom || "",
       categorie: item.categorie || "",
       fournisseur: item.fournisseur || "",
-      date_peremption: item.date_peremption || "",
       seuil_critique: item.seuil_critique || "",
     });
     setShowModal(true);
@@ -227,7 +222,6 @@ export default function ProduitsPage() {
       nom: "",
       categorie: "",
       fournisseur: "",
-      date_peremption: "",
       seuil_critique: "",
     });
     setFormError(null);
@@ -241,7 +235,6 @@ export default function ProduitsPage() {
       nom: "",
       categorie: "",
       fournisseur: "",
-      date_peremption: "",
       seuil_critique: "",
     });
     setFormError(null);
@@ -457,7 +450,6 @@ export default function ProduitsPage() {
                         item.fournisseur || "",
                         calculateCurrentStock(item.id),
                         item.seuil_critique || "",
-                        item.date_peremption || "",
                       ]),
                     ]
                       .map((row) => row.join(","))
@@ -580,23 +572,6 @@ export default function ProduitsPage() {
                             )}
                           </td>
                           <td>
-                            {item.date_peremption ? (
-                              <span
-                                className={`badge ${
-                                  new Date(item.date_peremption) < new Date()
-                                    ? "badge-danger"
-                                    : "badge-info"
-                                }`}
-                              >
-                                {new Date(
-                                  item.date_peremption
-                                ).toLocaleDateString("fr-FR")}
-                              </span>
-                            ) : (
-                              <span className="text-muted">-</span>
-                            )}
-                          </td>
-                          <td>
                             <div className="d-flex gap-1">
                               <button
                                 className="btn btn-primary btn-sm"
@@ -708,25 +683,6 @@ export default function ProduitsPage() {
                               setForm({ ...form, fournisseur: e.target.value })
                             }
                             placeholder="ex: Fournisseur ABC"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="col-12 col-md-6">
-                        <div className="form-group">
-                          <label className="form-label">
-                            Date de péremption
-                          </label>
-                          <input
-                            type="date"
-                            className="form-control"
-                            value={form.date_peremption}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                date_peremption: e.target.value,
-                              })
-                            }
                           />
                         </div>
                       </div>

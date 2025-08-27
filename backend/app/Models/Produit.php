@@ -15,7 +15,6 @@ class Produit extends Model
         'nom',
         'categorie',
         'fournisseur',
-        'date_peremption',
         'seuil_critique',
     ];
 
