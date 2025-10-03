@@ -140,32 +140,6 @@ export default function UsersPage() {
                   Page {currentPage} sur {totalPages}
                 </div>
               )}
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-outline btn-sm btn-action-neutral"
-                  onClick={() => {
-                    const csv = [
-                      ['Nom', 'Email', 'Rôle', 'Date de création'],
-                      ...users.map(user => [
-                        user.name,
-                        user.email,
-                        user.role,
-                        user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '-'
-                      ])
-                    ].map(row => row.join(',')).join('\n');
-                    
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'utilisateurs.csv';
-                    a.click();
-                  }}
-                >
-                  <i className="fas fa-download me-1"></i>
-                  Exporter CSV
-                </button>
-              </div>
             </div>
           </div>
           

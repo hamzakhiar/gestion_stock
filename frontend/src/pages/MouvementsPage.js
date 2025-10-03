@@ -147,9 +147,7 @@ export default function MouvementsPage() {
   const getTypeBadge = (type) => {
     const typeConfig = {
       'entrée': { color: 'badge-success', icon: 'fas fa-sign-in-alt' },
-      'sortie': { color: 'badge-danger', icon: 'fas fa-sign-out-alt' },
-      // Utiliser une couleur d'information (bleu) pour bien différencier du vert d'entrée
-      'transfert': { color: 'badge-info', icon: 'fas fa-exchange-alt' }
+      'sortie': { color: 'badge-danger', icon: 'fas fa-sign-out-alt' }
     };
     
     const config = typeConfig[type?.toLowerCase()] || { color: 'badge-secondary', icon: 'fas fa-question' };
@@ -184,32 +182,6 @@ export default function MouvementsPage() {
               <i className="fas fa-filter me-1"></i>
               Filtres
             </button>
-            <button
-              className="btn btn-outline btn-sm btn-action-neutral"
-              onClick={() => {
-                const csv = [
-                  ['Date', 'Type', 'Produit', 'Magasin', 'Quantité', 'Utilisateur'],
-                  ...filtered.map(m => [
-                    m.created_at ? new Date(m.created_at).toLocaleDateString('fr-FR') : '-',
-                    m.type || '-',
-                    m.produit?.nom || `Produit #${m.produit_id}`,
-                    m.magasin?.nom || `Magasin #${m.magasin_id}`,
-                    m.quantite || '-',
-                    m.user?.name || `Utilisateur #${m.user_id}` || '-'
-                  ])
-                ].map(row => row.join(',')).join('\n');
-                
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'mouvements.csv';
-                a.click();
-              }}
-            >
-              <i className="fas fa-download me-1"></i>
-              Exporter CSV
-            </button>
           </div>
         </div>
 
@@ -237,7 +209,6 @@ export default function MouvementsPage() {
                     <option value="">Tous les types</option>
                     <option value="entrée">Entrée</option>
                     <option value="sortie">Sortie</option>
-                    <option value="transfert">Transfert</option>
                   </select>
                 </div>
               </div>

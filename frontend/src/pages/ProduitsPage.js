@@ -431,42 +431,6 @@ export default function ProduitsPage() {
                 <i className="fas fa-list me-2"></i>
                 Produits ({filtered.length})
               </h3>
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-outline btn-sm btn-action-neutral"
-                  onClick={() => {
-                    const csv = [
-                      [
-                        "Nom",
-                        "Catégorie",
-                        "Fournisseur",
-                        "Stock Actuel",
-                        "Seuil Critique",
-                        "Date Péremption",
-                      ],
-                      ...filtered.map((item) => [
-                        item.nom,
-                        item.categorie || "",
-                        item.fournisseur || "",
-                        calculateCurrentStock(item.id),
-                        item.seuil_critique || "",
-                      ]),
-                    ]
-                      .map((row) => row.join(","))
-                      .join("\n");
-
-                    const blob = new Blob([csv], { type: "text/csv" });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "produits.csv";
-                    a.click();
-                  }}
-                >
-                  <i className="fas fa-download me-1"></i>
-                  Exporter CSV
-                </button>
-              </div>
             </div>
           </div>
 
@@ -492,7 +456,6 @@ export default function ProduitsPage() {
                       <th>Fournisseur</th>
                       <th>Stock Actuel</th>
                       <th>Seuil Critique</th>
-                      <th>Date Péremption</th>
                       <th>Actions</th>
                     </tr>
                   </thead>

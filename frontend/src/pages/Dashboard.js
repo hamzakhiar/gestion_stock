@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import Loading from "../components/Loading";
+import Pagination from "../components/Pagination";
 
 async function fetchAllPaginated(path) {
   const first = await api.get(path);
@@ -31,6 +32,8 @@ export default function Dashboard() {
   const [magasins, setMagasins] = useState([]);
   const [stocks, setStocks] = useState([]);
   const [mouvements, setMouvements] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Calculate current stock for each product based on movements
   const calculateCurrentStock = (produitId) => {
@@ -74,9 +77,19 @@ export default function Dashboard() {
       .filter((p) => {
         const currentStock = calculateCurrentStock(p.id);
         return currentStock <= Number(p.seuil_critique);
-      })
-      .slice(0, 5);
+      });
   }, [produits, mouvements]);
+
+  // Pagination logic for low stock alerts
+  const totalPages = Math.ceil(lowStock.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedLowStock = lowStock.slice(startIndex, endIndex);
+
+  // Reset to first page when low stock data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [lowStock.length]);
 
   if (loading) return <Loading />;
   if (error)
@@ -183,72 +196,101 @@ export default function Dashboard() {
                 </p>
               </div>
             ) : (
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Produit</th>
-                      <th>Stock Actuel</th>
-                      <th>Seuil Critique</th>
-                      <th>Statut</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lowStock.map((p) => {
-                      const currentStock = calculateCurrentStock(p.id);
-                      const stockPercentage = p.seuil_critique
-                        ? (currentStock / p.seuil_critique) * 100
-                        : 0;
+              <>
+                {/* Results Summary */}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <span className="text-muted">
+                      Affichage de <strong>{startIndex + 1}</strong> à{" "}
+                      <strong>{Math.min(endIndex, lowStock.length)}</strong> sur{" "}
+                      <strong>{lowStock.length}</strong> alerte{lowStock.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="text-muted">
+                      Page {currentPage} sur {totalPages}
+                    </div>
+                  )}
+                </div>
 
-                      return (
-                        <tr key={p.id}>
-                          <td>
-                            <div>
-                              <strong>{p.nom}</strong>
-                              <br />
-                              <small className="text-muted">
-                                {p.description || "Aucune description"}
-                              </small>
-                            </div>
-                          </td>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              <span className="fw-bold me-2 text-danger">
-                                {currentStock}
-                              </span>
-                              <div
-                                className="progress flex-grow-1"
-                                style={{ height: "8px", width: "80px" }}
-                              >
-                                <div
-                                  className="progress-bar bg-danger"
-                                  style={{
-                                    width: `${Math.min(
-                                      Math.max(stockPercentage, 0),
-                                      100
-                                    )}%`,
-                                  }}
-                                ></div>
+                <div className="table-responsive">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th>Produit</th>
+                        <th>Stock Actuel</th>
+                        <th>Seuil Critique</th>
+                        <th>Statut</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedLowStock.map((p) => {
+                        const currentStock = calculateCurrentStock(p.id);
+                        const stockPercentage = p.seuil_critique
+                          ? (currentStock / p.seuil_critique) * 100
+                          : 0;
+
+                        return (
+                          <tr key={p.id}>
+                            <td>
+                              <div>
+                                <strong>{p.nom}</strong>
+                                <br />
+                                <small className="text-muted">
+                                  {p.description || "Aucune description"}
+                                </small>
                               </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span className="badge badge-secondary">
-                              {p.seuil_critique}
-                            </span>
-                          </td>
-                          <td>
-                            <span className="badge badge-warning">
-                              <i className="fas fa-exclamation-triangle me-1"></i>
-                              Stock Bas
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            </td>
+                            <td>
+                              <div className="d-flex align-items-center">
+                                <span className="fw-bold me-2 text-danger">
+                                  {currentStock}
+                                </span>
+                                <div
+                                  className="progress flex-grow-1"
+                                  style={{ height: "8px", width: "80px" }}
+                                >
+                                  <div
+                                    className="progress-bar bg-danger"
+                                    style={{
+                                      width: `${Math.min(
+                                        Math.max(stockPercentage, 0),
+                                        100
+                                      )}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="badge badge-secondary">
+                                {p.seuil_critique}
+                              </span>
+                            </td>
+                            <td>
+                              <span className="badge badge-warning">
+                                <i className="fas fa-exclamation-triangle me-1"></i>
+                                Stock Bas
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="d-flex justify-content-center mt-4">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

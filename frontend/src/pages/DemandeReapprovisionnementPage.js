@@ -316,41 +316,6 @@ export default function DemandeReapprovisionnementPage() {
                   Page {currentPage} sur {totalPages}
                 </div>
               )}
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-outline btn-sm btn-action-neutral"
-                  onClick={() => {
-                                         const csv = [
-                       ['Date', 'Produit', 'Magasin', 'Quantité', 'Priorité', 'Statut', 'Demandeur', 'Commentaire'],
-                       ...filteredDemandes.map(d => [
-                         d.created_at ? new Date(d.created_at).toLocaleDateString('fr-FR') : '-',
-                         d.produit?.nom || 
-                           (Array.isArray(produits) ? produits.find(p => p.id === d.produit_id)?.nom : null) || 
-                           `Produit #${d.produit_id}`,
-                         d.magasin?.nom || 
-                           (Array.isArray(magasins) ? magasins.find(m => m.id === d.magasin_id)?.nom : null) || 
-                           `Magasin #${d.magasin_id}`,
-                         d.quantite_demandee,
-                         d.priorite,
-                         d.statut,
-                         d.user?.name || 
-                           `Utilisateur #${d.user_id}`,
-                         d.commentaire || ''
-                       ])
-                     ].map(row => row.join(',')).join('\n');
-
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'demandes-reapprovisionnement.csv';
-                    a.click();
-                  }}
-                >
-                  <i className="fas fa-download me-1"></i>
-                  Exporter CSV
-                </button>
-              </div>
             </div>
           </div>
 

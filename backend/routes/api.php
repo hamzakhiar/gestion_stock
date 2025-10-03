@@ -48,13 +48,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{id}', [StockMagasinController::class, 'update']);
         Route::delete('/{id}', [StockMagasinController::class, 'destroy']);
     });
-    
-    // Transfer management
-    Route::prefix('transferts')->group(function () {
-        Route::get('/', [TransfertController::class, 'index']);
-        Route::post('/', [TransfertController::class, 'store']);
-        Route::get('/{id}', [TransfertController::class, 'show']);
-        Route::put('/{id}', [TransfertController::class, 'update']);
-        Route::delete('/{id}', [TransfertController::class, 'destroy']);
-    });
 });

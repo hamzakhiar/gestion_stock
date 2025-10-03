@@ -123,16 +123,6 @@ export default function Navbar() {
               </li>
               <li className="nav-item">
                 <NavLink 
-                  className={`nav-link ${isActive('/transferts') ? 'active' : ''}`} 
-                  to="/transferts" 
-                  onClick={closeMenu}
-                >
-                  <i className="fas fa-exchange-alt me-2"></i>
-                  Transferts
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink 
                   className={`nav-link ${isActive('/mouvements') ? 'active' : ''}`} 
                   to="/mouvements" 
                   onClick={closeMenu}

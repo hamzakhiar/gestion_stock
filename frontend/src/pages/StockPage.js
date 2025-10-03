@@ -157,29 +157,6 @@ export default function StockPage() {
               <i className="fas fa-filter me-1"></i>
               Filtres
             </button>
-            <button
-              className="btn btn-outline btn-sm btn-action-neutral"
-              onClick={() => {
-                const csv = [
-                  ['Magasin', 'Produit', 'Quantité'],
-                  ...stockData.map(s => [
-                    s.magasin?.nom || `Magasin #${s.magasin_id}`,
-                    s.produit?.nom || `Produit #${s.produit_id}`,
-                    s.quantite
-                  ])
-                ].map(row => row.join(',')).join('\n');
-
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'stocks.csv';
-                a.click();
-              }}
-            >
-              <i className="fas fa-download me-1"></i>
-              Exporter CSV
-            </button>
           </div>
         </div>
 

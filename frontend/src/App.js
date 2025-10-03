@@ -15,7 +15,6 @@ import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import ProduitsPage from "./pages/ProduitsPage";
 import StockPage from "./pages/StockPage";
-import TransferPage from "./pages/TransferPage";
 import BonEntreePage from "./pages/BonEntreePage";
 import BonSortiePage from "./pages/BonSortiePage";
 import MouvementsPage from "./pages/MouvementsPage";
@@ -73,15 +72,6 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <BonSortiePage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/transferts"
-          element={
-            <ProtectedRoute>
-              <TransferPage />
             </ProtectedRoute>
           }
         />
